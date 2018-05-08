@@ -1,0 +1,54 @@
+# gitignore
+
+# auto saves from emacs and the likes
+*~
+*#
+
+# Analysis specific stuff
+*.yoda
+*.hepmc
+.log
+
+# Analysis tools in folder
+TTbarDiLep.cc
+codecounter.cc
+codecounter.sh
+compileHook.sh
+doRivet.sh
+runPythia.sh
+
+# sub-directories
+#**/
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
