@@ -1,0 +1,43 @@
+Name: ATLAS_2015_I1404878
+Year: 2015
+Summary: <Insert short ATLAS_2015_I1404878 description>
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1404878
+Status: UNVALIDATED
+Authors:
+ - Your Name <your@email.address>
+#References:
+#- '<Example: Eur.Phys.J. C76 (2016) no.7, 392>'
+#- '<Example: DOI:10.1140/epjc/s10052-016-4184-8>'
+#- '<Example: arXiv:1605.03814>'
+RunInfo: <Describe event types, cuts, and other general generator config tips.>
+NeedCrossSection: no
+#Beams: <Insert beam pair(s), e.g. [p+, p+] or [[p-, e-], [p-, e+]]>
+#Energies: <Run energies or beam energy pairs in GeV, e.g. [13000] or [[8.0, 3.5]] or [630, 1800]. Order pairs to match "Beams">
+Description:
+  '<A fairly long description, including what is measured
+  and if possible what it is useful for in terms of MC validation
+  and tuning. Use LaTeX for maths like $\pT > 50\;\GeV$.>'
+BibKey: Aad:2015mbv
+BibTeX: '@article{Aad:2015mbv,
+      author         = "Aad, Georges and others",
+      title          = "{Measurements of top-quark pair differential
+                        cross-sections in the lepton+jets channel in $pp$
+                        collisions at $\sqrt{s}=8$ TeV using the ATLAS detector}",
+      collaboration  = "ATLAS",
+      journal        = "Eur. Phys. J.",
+      volume         = "C76",
+      year           = "2016",
+      number         = "10",
+      pages          = "538",
+      doi            = "10.1140/epjc/s10052-016-4366-4",
+      eprint         = "1511.04716",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-PH-EP-2015-239",
+      SLACcitation   = "%%CITATION = ARXIV:1511.04716;%%"
+}'
+ToDo:
+ - Implement the analysis, test it, remove this ToDo, and mark as VALIDATED :-)
+
