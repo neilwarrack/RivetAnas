@@ -1,24 +1,20 @@
 Name: ATLAS_2014_I1304289
 Year: 2014
-Summary: <Insert short ATLAS_2014_I1304289 description>
+Summary: Parton-level top-pair normalized differential distributions in pp collisions at $\sqrt{s}=7 \text{TeV}$
 Experiment: ATLAS
 Collider: LHC
 InspireID: 1304289
 Status: UNVALIDATED
 Authors:
- - Your Name <your@email.address>
+ - Neil Warrack, neil.warrack@cern.ch
 #References:
-#- '<Example: Eur.Phys.J. C76 (2016) no.7, 392>'
-#- '<Example: DOI:10.1140/epjc/s10052-016-4184-8>'
-#- '<Example: arXiv:1605.03814>'
-RunInfo: <Describe event types, cuts, and other general generator config tips.>
+#- "arXiv:1407.0371v3"
+RunInfo: ttbar events are expected, including (but not limited to) semileptonic decays. Top quarks must appear explicitly in the event record.
 NeedCrossSection: no
-#Beams: <Insert beam pair(s), e.g. [p+, p+] or [[p-, e-], [p-, e+]]>
-#Energies: <Run energies or beam energy pairs in GeV, e.g. [13000] or [[8.0, 3.5]] or [630, 1800]. Order pairs to match "Beams">
+#Beams: [p+, p+]
+#Energies: 7000
 Description:
-  '<A fairly long description, including what is measured
-  and if possible what it is useful for in terms of MC validation
-  and tuning. Use LaTeX for maths like $\pT > 50\;\GeV$.>'
+"Normalized differential distributions as functions of hadronically decaying top quark $p_T$ and ttbar system mass, $p_T$ and absolute rapidity are plotted for top quark pair production events in pp collisions at a centre-of-mass energy of $7 \text{TeV}$. The distributions are normalized to remove sensitivity to the total cross-section. Only semileptonic events are used and so this analysis is sensitive to BSM modifications which only effect semileptonic decays."
 BibKey: Aad:2014zka
 BibTeX: '%%% contains utf-8, see: http://inspirehep.net/info/faq/general#utf8
 %%% add \usepackage[utf8]{inputenc} to your latex preamble

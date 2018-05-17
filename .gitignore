@@ -5,9 +5,9 @@
 *#
 
 # Analysis specific stuff
-#*.yoda
+*.yoda
 *.hepmc
-.log
+*.log
 
 # Analysis tools in folder
 TTbarDiLep.cc
@@ -18,7 +18,8 @@ doRivet.sh
 runPythia.sh
 
 # sub-directories
-#**/
+**/rivet-plots/
+/ValidationPlots
 
 # Prerequisites
 *.d

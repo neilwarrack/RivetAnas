@@ -1,0 +1,47 @@
+Name: ATLAS_2014_I1301856
+Year: 2014
+Summary: Parton-level top-pair cross section in pp collisions at $\sqrt{s}=7 \text{TeV}$ and $\sqrt{s}=8 \text{TeV}$ (in two seperate analyses, for sensible output), using $e\mu$ dileptonic decays of ttbar pairs.
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1301856
+Status: UNVALIDATED
+Authors:
+ - Neil Warrack neil.warrack@cern.ch
+#References:
+#- '<Example: Eur.Phys.J. C76 (2016) no.7, 392>'
+#- '<Example: DOI:10.1140/epjc/s10052-016-4184-8>'
+#- 'arXiv:1406.5375'
+RunInfo: ttbar events are expected in MC events, including (but not limited to) dileptonic decays. Top quarks must appear explicitly in the event record.
+NeedCrossSection: no
+#Beams: [p+, p+]
+#Energies: 7000 and 8000 
+Description:
+"Measurement of the ttbar production cross-section using e mu decays in top quark pair production in pp collisions at a centre-of-mass energy of $7 \text{TeV}$ and $8 \text{TeV}$. The analysis is sensititive to the assumed branching ratio: BR($t\bar{t}\text{->}e mu nu\bar{nu} b \bar{b}$) = 3.2%. Generator must be run at 7 & 8 TeV for ATLAS_2014_I1301856_7TeV.cc and ATLAS_2014_I1301856_8TeV.cc respectively."
+BibKey: Aad:2014kva
+BibTeX: '%%% contains utf-8, see: http://inspirehep.net/info/faq/general#utf8
+%%% add \usepackage[utf8]{inputenc} to your latex preamble
+
+@article{Aad:2014kva,
+      author         = "Aad, Georges and others",
+      title          = "{Measurement of the $t\bar{t}$ production cross-section
+                        using $e\mu $ events with b-tagged jets in pp collisions
+                        at $\sqrt{s}$ = 7 and 8  $\,\mathrm{TeV}$ with the ATLAS
+                        detector}",
+      collaboration  = "ATLAS",
+      journal        = "Eur. Phys. J.",
+      volume         = "C74",
+      year           = "2014",
+      number         = "10",
+      pages          = "3109",
+      doi            = "10.1140/epjc/s10052-016-4501-2,
+                        10.1140/epjc/s10052-014-3109-7",
+      note           = "[Addendum: Eur. Phys. J.C76,no.11,642(2016)]",
+      eprint         = "1406.5375",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-PH-EP-2014-124, CERN-EP-2014-124",
+      SLACcitation   = "%%CITATION = ARXIV:1406.5375;%%"
+}'
+ToDo:
+ - Implement the analysis, test it, remove this ToDo, and mark as VALIDATED :-)
+
