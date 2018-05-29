@@ -1,9 +1,10 @@
 // -*- C++ -*-
 #include "Rivet/Analysis.hh"
-#include "Rivet/Projections/FinalState.hh"
+#include "Rivet/Tools/JetUtils.hh"
 #include "Rivet/Projections/FastJets.hh"
-#include "Rivet/Projections/PartonicTops.hh"
+#include "Rivet/Projections/FinalState.hh"
 #include "Rivet/Projections/IdentifiedFinalState.hh"
+#include "Rivet/Projections/PartonicTops.hh"
 #include "HepMC/IO_GenEvent.h"
 
 // ============= Neil's Debug Toolkit ============== //
@@ -27,11 +28,11 @@ namespace Rivet {
 
 
   /// @brief Parton-level top-pair cross-sections at 7TeV and 8TeV using dileptonic ($e \mu$) decays
-  class ATLAS_2014_I1301856 : public Analysis {
+  class tempTopAnalysis : public Analysis {
   public:
 
     /// Constructor
-    DEFAULT_RIVET_ANALYSIS_CTOR(ATLAS_2014_I1301856);
+    DEFAULT_RIVET_ANALYSIS_CTOR(tempTopAnalysis);
 
 
     /// @name Analysis methods
@@ -42,13 +43,13 @@ namespace Rivet {
 
       FinalState fs;
 
-      //      Cut eCuts = Cuts::abseta < 1.37 && 1.52 < Cuts::abseta < 2.47 &&
-      Cut eCuts   = (Cuts::abseta < 2.47) && ( (Cuts::abseta <= 1.37) || (Cuts::abseta >= 1.52) ) && ( Cuts::Et > 25*GeV );
-      Cut muCuts  = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;    
-      Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
+      Cut lepCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV ;
+     
+      // Cut muCuts  = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;    
+      //Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
 
 
-      //      IdentifiedFinalState electron_fs(eCuts, PID::ELECTRON);
+      //IdentifiedFinalState electron_fs(lepCuts, PID::ELECTRON);
       IdentifiedFinalState electron_fs;
       electron_fs.acceptIdPair(PID::ELECTRON);
       declare(electron_fs, "Electrons");
@@ -58,10 +59,10 @@ namespace Rivet {
       muon_fs.acceptIdPair(PID::MUON);
       declare(muon_fs, "Muons");
       
-      // Parton Level Top Quarks
-      declare(PartonicTops(PartonicTops::ELECTRON), "ElectronPartonTops") ;
-      declare(PartonicTops(PartonicTops::MUON), "MuonPartonTops") ;
-
+      // Projection for Parton Level Top Quarks
+      declare(PartonicTops(PartonicTops::E_MU, lepCuts), "leptonicTops") ;
+      //      declare(PartonicTops(PartonicTops::MUON, lepCuts), "MuonPartonTops") ;
+      
       // Projection for jets
       declare(FastJets(fs, FastJets::ANTIKT, 0.4), "Jets");
 
@@ -84,23 +85,55 @@ namespace Rivet {
       const Particles& electrons = apply<IdentifiedFinalState>(event, "Electrons").particlesByPt();
       const Particles& muons =     apply<IdentifiedFinalState>(event, "Muons").particlesByPt();
 
-      const Particles electronpartontops = apply<ParticleFinder>(event, "ElectronPartonTops").particlesByPt();
-      const Particles muonpartontops     = apply<ParticleFinder>(event, "MuonPartonTops").particlesByPt();
-      const Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
+      const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();
+      //      const Particles leptons = apply<ParticleFinder>(event, "leptonTop") ;
+      if ( leptons.size() != 1 ) vetoEvent;
+
+      //const Particles muonpartontops     = apply<ParticleFinder>(event, "MuonPartonTops").particlesByPt();
+      Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
 
 
-      Jets selectedJets;
-      Particles selectedElectrons, selectedMuons;
-      bool tooClose = false;
 
+      //Particles selectedElectrons, selectedMuons;
+      //bool tooClose = false;
+     
+      
+      // find jets in fiducial pT and eta ranges
+      Cut jetCuts = Cuts::abseta < 4.5 && Cuts::pT > 30*GeV ;
+      ifilter_select(jets, jetCuts ) ;
+      if ( jets.size() != 2 ) vetoEvent ;
+      
+      // find and count b-jets
+      Jet bJet;
+      int b = 0 ;
       for (const Jet& j : jets){
-	if (j.pT() > 25*GeV && j.abseta() < 2.5) selectedJets.push_back(j);
+	if ( j.bTagged() ) {
+	  b++ ;
+	  if (b == 2) vetoEvent;
+	  bJet = j;
+	}
       }
 
-      //      cout << "re:" << electrons.size() << " rm:" << muons.size() << " ";
-      //      cout << "pe:" << electronpartontops.size() << " pm:" << muonpartontops.size() << " ";
+      
+      //	if (j.pT() > 25*GeV && j.abseta() < 2.5) selectedJets.push_back(j);
 
-      for (const Particle& e : electrons){
+      // find invariant mass of lepton-b-jet system
+      const FourMomentum bJt4p = bJet ;
+      const FourMomentum lep4p = leptons[0] ;
+      const FourMomentum lepBJt4p = bJt4p + lep4p ;
+      if ( lepBJt4p.mass() < 160*GeV ) vetoEvent ;
+      
+
+
+
+
+      /*
+    //      cout << "re:" << electrons.size() << " rm:" << muons.size() << " ";
+      //      cout << "pe:" << electronpartontops.size() << " pm:" << muonpartontops.size() << " ";
+  
+
+  
+    for (const Particle& e : electrons){
 	for (const Jet& sj : selectedJets){
 	  if (deltaR(sj, e) < 0.4) tooClose = true ;
 	} 
@@ -139,14 +172,14 @@ namespace Rivet {
 	}
       }
 
-      /*
+  
       cout << "______________" << endl;
       cout << "final_st: fj:" << jets.size()         << " fe:" << electrons.size()         << " fm:"<< muons.size()         << " " << endl;
       cout << "selected: sj:" << selectedJets.size() << " se:" << selectedElectrons.size() << " sm:"<< selectedMuons.size() << " " << endl;
       cout << "partonic:      pe:" << electronpartontops.size() << " sm:"<< muonpartontops.size() << " " << endl;
-      */
+  
 
-      /*
+  
       if (electronpartontops.size() > electrons.size()){cout <<         "                             pe>fe" << endl;
 	_c_error_e->fill(event.weight()); //error counter
 	// print event record to file
@@ -162,13 +195,13 @@ namespace Rivet {
       }
       if (selectedElectrons.size() > electronpartontops.size()) cout << "                             se>pe" << endl;      
       if (selectedMuons.size() > muonpartontops.size()) cout <<         "                             se>pe" << endl;      
-      */
+  
 
-      /*
+  
       if ((selectedElectrons.size() == 1 ) && (selectedMuons.size() == 1)) N6;
       if (bTaggedJets.size() == 1) N7;
       if (bTaggedJets.size() == 2) N8;
-      */
+  
 
       // veto if not an e mu pair
       const bool eMuPair = ( electronpartontops.size() == 1 && muonpartontops.size() == 1 );
@@ -187,15 +220,15 @@ namespace Rivet {
 	} else { N2; RET; vetoEvent; }
 
       }
-
-      
+*/
+      N9;
       RET;
     }
 
 
     /// Normalise histograms etc., after the run
     void finalize() {
-
+      /*
       double BR = 0.032; // branching ratio
       double SF = crossSection()*picobarn/sumOfWeights()/BR;  // scale factor
      
@@ -212,7 +245,7 @@ namespace Rivet {
 
 
       _hepmcout->clear(); _hepmcout.reset();
-
+      */
     }
 
     //@}
@@ -229,7 +262,7 @@ namespace Rivet {
 
 
   // The hook for the plugin system
-  DECLARE_RIVET_PLUGIN(ATLAS_2014_I1301856);
+  DECLARE_RIVET_PLUGIN(tempTopAnalysis);
 
 
 }
