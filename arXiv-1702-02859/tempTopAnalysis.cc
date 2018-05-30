@@ -5,6 +5,7 @@
 #include "Rivet/Projections/FinalState.hh"
 #include "Rivet/Projections/IdentifiedFinalState.hh"
 #include "Rivet/Projections/PartonicTops.hh"
+#include "Rivet/Projections/WFinder.hh"
 #include "HepMC/IO_GenEvent.h"
 
 // ============= Neil's Debug Toolkit ============== //
@@ -27,7 +28,7 @@
 namespace Rivet {
 
 
-  /// @brief Parton-level top-pair cross-sections at 7TeV and 8TeV using dileptonic ($e \mu$) decays
+  /// @brief What it is, what it is
   class tempTopAnalysis : public Analysis {
   public:
 
@@ -59,6 +60,29 @@ namespace Rivet {
       muon_fs.acceptIdPair(PID::MUON);
       declare(muon_fs, "Muons");
       
+      WFinder w_electron(electron_fs, 
+			 lepCuts, 
+			 PID::ELECTRON, 
+			 35*GeV, 100*GeV, // Mass Window??? Max??? NB: W transverse mass > 35GeV is stated in paper which defines pseudo-top (https://arxiv.org/pdf/1502.05923.pdf)
+			 30*GeV, //E_T_miss 
+			 0.1, // delta R of clustering to QED dress electrons
+			 WFinder::PROMPTCHLEPTONS, // can remove if not changed
+			 WFinder::CLUSTERNODECAY, // this will not include non prompt photons, sould I include them? if so use: CLUSTERALL. Can remove if not changed
+			 WFinder::TRACK, //can remove if not changed
+			 WFinder::TRANSMASS); // tells mass window (>35*GeV) to be read as transverse mass.
+			       
+      declare(w_electron, "W_Electron");
+
+
+
+      WFinder w_muon(muon_fs,  lepCuts, PID::MUON, 35*GeV, 100*GeV, 30*GeV, 0.1, WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY, WFinder::TRACK, WFinder::TRANSMASS); 
+			       
+      declare(w_muon, "W_Muon");
+
+
+
+
+
       // Projection for Parton Level Top Quarks
       declare(PartonicTops(PartonicTops::E_MU, lepCuts), "leptonicTops") ;
       //      declare(PartonicTops(PartonicTops::MUON, lepCuts), "MuonPartonTops") ;
@@ -87,7 +111,7 @@ namespace Rivet {
 
       const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();
       //      const Particles leptons = apply<ParticleFinder>(event, "leptonTop") ;
-      if ( leptons.size() != 1 ) vetoEvent;
+      if ( leptonicTops.size() != 1 ) vetoEvent;
 
       //const Particles muonpartontops     = apply<ParticleFinder>(event, "MuonPartonTops").particlesByPt();
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
@@ -119,7 +143,7 @@ namespace Rivet {
 
       // find invariant mass of lepton-b-jet system
       const FourMomentum bJt4p = bJet ;
-      const FourMomentum lep4p = leptons[0] ;
+      const FourMomentum lep4p = leptonicTops[0] ;
       const FourMomentum lepBJt4p = bJt4p + lep4p ;
       if ( lepBJt4p.mass() < 160*GeV ) vetoEvent ;
       
