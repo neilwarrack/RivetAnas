@@ -49,7 +49,13 @@ namespace Rivet {
       // Cut muCuts  = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;    
       //Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
 
+      if (fuzzyEquals(sqrtS(), 7*TeV)) {
+	...
+      } else {
+	...
+      } 
 
+      
       //IdentifiedFinalState electron_fs(lepCuts, PID::ELECTRON);
       IdentifiedFinalState electron_fs;
       electron_fs.acceptIdPair(PID::ELECTRON);
@@ -116,8 +122,10 @@ namespace Rivet {
       //const Particles muonpartontops     = apply<ParticleFinder>(event, "MuonPartonTops").particlesByPt();
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
 
+      const WFinder& w_el = apply<WFinder>(event, "W_Electron");
+      const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
 
-
+      const FourMomentum PseudoTop w_el.
       //Particles selectedElectrons, selectedMuons;
       //bool tooClose = false;
      
