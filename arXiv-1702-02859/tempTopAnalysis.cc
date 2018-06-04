@@ -49,11 +49,11 @@ namespace Rivet {
       // Cut muCuts  = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;    
       //Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
 
-      if (fuzzyEquals(sqrtS(), 7*TeV)) {
-	...
-      } else {
-	...
-      } 
+      //      if (fuzzyEquals(sqrtS(), 7*TeV)) {
+	//	...
+      //      } else {
+	//	...
+      //      } 
 
       
       //IdentifiedFinalState electron_fs(lepCuts, PID::ELECTRON);
@@ -97,12 +97,12 @@ namespace Rivet {
       declare(FastJets(fs, FastJets::ANTIKT, 0.4), "Jets");
 
       // Book histograms
-      _c_ttbar = bookCounter("ttbarXsec");
-      _c_1btag = bookCounter("1BTag");
-      _c_2btag = bookCounter("2BTag");
-      _c_ttbarEMuPairsOppChar_partonic = bookCounter("emupairsOppChar_partonic");
-      _c_error_e  = bookCounter("error_e");
-      _c_error_mu = bookCounter("error_mu");
+      _c_fidt    = bookCounter("fidTotXsectq");
+      _c_fidtbar = bookCounter("fidTotXsectbarq");
+      //      _c_2btag = bookCounter("2BTag");
+      //_c_ttbarEMuPairsOppChar_partonic = bookCounter("emupairsOppChar_partonic");
+      //_c_error_e  = bookCounter("error_e");
+      //_c_error_mu = bookCounter("error_mu");
      
       _hepmcout.reset(new HepMC::IO_GenEvent("inspectevents.hepmc"));    
     }
@@ -117,15 +117,25 @@ namespace Rivet {
 
       const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();
       //      const Particles leptons = apply<ParticleFinder>(event, "leptonTop") ;
-      if ( leptonicTops.size() != 1 ) vetoEvent;
+
 
       //const Particles muonpartontops     = apply<ParticleFinder>(event, "MuonPartonTops").particlesByPt();
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
-
+      
       const WFinder& w_el = apply<WFinder>(event, "W_Electron");
+      const Particles w_elP= w_el.bosons();
       const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
+      const Particles w_muP= w_el.bosons();
+ 
+      
+	//const FourMomentum w_mu4p = w_mu.boson() ;
+      //const Particles tempparts = w_el.bosons() ;
+      // cout << "tempparts.size()" << tempparts.size() <<endl;
+      // const FourMomentum w_els4p = w_mu.bosons() ;
 
-      const FourMomentum PseudoTop w_el.
+      //      cout <<" w_els4p.size()=" <<  w_els4p.size() << endl;
+      // cout <<" w_mus4p.size()=" <<  w_mus4p.size() << endl;
+      
       //Particles selectedElectrons, selectedMuons;
       //bool tooClose = false;
      
@@ -133,30 +143,61 @@ namespace Rivet {
       // find jets in fiducial pT and eta ranges
       Cut jetCuts = Cuts::abseta < 4.5 && Cuts::pT > 30*GeV ;
       ifilter_select(jets, jetCuts ) ;
-      if ( jets.size() != 2 ) vetoEvent ;
-      
+      if ( jets.size() != 2 ) {
+	N4;
+	RET;
+	vetoEvent ;
+      }
       // find and count b-jets
       Jet bJet;
       int b = 0 ;
       for (const Jet& j : jets){
 	if ( j.bTagged() ) {
 	  b++ ;
-	  if (b == 2) vetoEvent;
+	  if (b == 2) {N5; RET; vetoEvent;}
 	  bJet = j;
 	}
       }
+      if ( b == 0 ) {RET; vetoEvent;} // this implies there must be 2 jets of which only one is b-tagged
 
+
+      FourMomentum wp4;
+      if ( w_elP.size() + w_muP.size() != 0){
+
+	//	cout << "W-el=" << w_elP.size() << " " ;
+	//cout << "W-mu=" << w_muP.size() << " " ;
+	if       ( w_elP.size() == 1 ) const FourMomentum w4p = w_elP[0] ;
+	else if  ( w_muP.size() == 1 ) const FourMomentum w4p = w_muP[0] ;
+	else N6; //hmmm
+	RET;
+	vetoEvent;
+      }
       
       //	if (j.pT() > 25*GeV && j.abseta() < 2.5) selectedJets.push_back(j);
 
       // find invariant mass of lepton-b-jet system
       const FourMomentum bJt4p = bJet ;
-      const FourMomentum lep4p = leptonicTops[0] ;
-      const FourMomentum lepBJt4p = bJt4p + lep4p ;
-      if ( lepBJt4p.mass() < 160*GeV ) vetoEvent ;
+      const FourMomentum pseudoTopp4 = bJt4p + wp4;
+
+
+      //const FourMomentum lep4p = leptonicTops[0] ;
+      //const FourMomentum lepBJt4p = bJt4p + lep4p ;
+      //if ( lepBJt4p.mass() < 160*GeV ){
+      //	N3; RET; vetoEvent ;
+      //}
+
+            
+      if ( leptonicTops.size() != 1 ){ N7; RET; vetoEvent;}
+      else {
+	const bool charge = leptonicTops[0].charge() > 0 ;
+
+	  if (charge){
+	    _c_fidt   ->fill(event.weight());
+	  } else {
+	    _c_fidtbar->fill(event.weight());
+	  }
+      }
       
-
-
 
 
       /*
@@ -260,6 +301,9 @@ namespace Rivet {
 
     /// Normalise histograms etc., after the run
     void finalize() {
+      double SF = crossSection()*picobarn/sumOfWeights();  // scale factor
+      scale(_c_fidt, SF);
+      scale(_c_fidtbar, SF);
       /*
       double BR = 0.032; // branching ratio
       double SF = crossSection()*picobarn/sumOfWeights()/BR;  // scale factor
@@ -285,7 +329,7 @@ namespace Rivet {
 
     /// @name Histograms
     //@{
-    CounterPtr _c_ttbar, _c_1btag, _c_2btag, _c_ttbarEMuPairsOppChar_partonic, _c_error_e, _c_error_mu;
+    CounterPtr _c_fidt, _c_fidtbar;
     //@}
 
     std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;
