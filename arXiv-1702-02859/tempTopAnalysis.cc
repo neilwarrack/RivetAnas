@@ -1,10 +1,12 @@
 // -*- C++ -*-
 #include "Rivet/Analysis.hh"
 #include "Rivet/Tools/JetUtils.hh"
+#include "Rivet/Projections/DressedLeptons.hh"
 #include "Rivet/Projections/FastJets.hh"
 #include "Rivet/Projections/FinalState.hh"
 #include "Rivet/Projections/IdentifiedFinalState.hh"
 #include "Rivet/Projections/PartonicTops.hh"
+#include "Rivet/Projections/PromptFinalState.hh"
 #include "Rivet/Projections/WFinder.hh"
 #include "HepMC/IO_GenEvent.h"
 
@@ -44,7 +46,8 @@ namespace Rivet {
 
       FinalState fs;
 
-      Cut lepCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV ;
+      // Particle-level electron and muon cuts
+      Cut e_muCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV ;
      
       // Cut muCuts  = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;    
       //Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
@@ -57,149 +60,172 @@ namespace Rivet {
 
       
       //IdentifiedFinalState electron_fs(lepCuts, PID::ELECTRON);
+      
+      // Project (particle level) prompt final state electrons and muons*
+      // *(including from tau decays but not from muon decays -- see bools) 
+      /// Electrons
       IdentifiedFinalState electron_fs;
       electron_fs.acceptIdPair(PID::ELECTRON);
       declare(electron_fs, "Electrons");
-
-      //      IdentifiedFinalState muon_fs(muCuts, PID::MUON);
+      PromptFinalState promptElectrons(electron_fs, true, false);
+      /// Muons
       IdentifiedFinalState muon_fs;
       muon_fs.acceptIdPair(PID::MUON);
       declare(muon_fs, "Muons");
-      
+      PromptFinalState promptMuons(muon_fs, true, false);
+
+      // Projections for (particle level) W boson to define (pseudo) top quark.
       WFinder w_electron(electron_fs, 
-			 lepCuts, 
+			 e_muCuts, 
 			 PID::ELECTRON, 
-			 35*GeV, 100*GeV, // Mass Window??? Max??? NB: W transverse mass > 35GeV is stated in paper which defines pseudo-top (https://arxiv.org/pdf/1502.05923.pdf)
+			 35*GeV, 8000*GeV, // Mass Window??? Max??? NB: W transverse mass > 35GeV is stated in paper which defines pseudo-top (https://arxiv.org/pdf/1502.05923.pdf)
 			 30*GeV, //E_T_miss 
 			 0.1, // delta R of clustering to QED dress electrons
 			 WFinder::PROMPTCHLEPTONS, // can remove if not changed
 			 WFinder::CLUSTERNODECAY, // this will not include non prompt photons, sould I include them? if so use: CLUSTERALL. Can remove if not changed
 			 WFinder::TRACK, //can remove if not changed
 			 WFinder::TRANSMASS); // tells mass window (>35*GeV) to be read as transverse mass.
-			       
       declare(w_electron, "W_Electron");
 
-
-
-      WFinder w_muon(muon_fs,  lepCuts, PID::MUON, 35*GeV, 100*GeV, 30*GeV, 0.1, WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY, WFinder::TRACK, WFinder::TRANSMASS); 
-			       
+      WFinder w_muon(muon_fs,  e_muCuts, PID::MUON, 35*GeV, 100*GeV, 30*GeV, 0.1, WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY, WFinder::TRACK, WFinder::TRANSMASS); 
       declare(w_muon, "W_Muon");
 
+      // Projections to find jets
+      IdentifiedFinalState photons(fs);
+      photons.acceptIdPair(PID::PHOTON);
+      declare(photons, "Photons");
+      /*
+      IdentifiedFinalState leptons(fs);
+      leptonfs.acceptIdPairs({PID::ELECTRON, PID::MUON});
+      declare(leptonfs, "Leptons");
+      PromptFinalState promptLeptons(leptonfs, true, false);// including via tau decays
+      IdentifiedFinalState neutrinos(fs);
+      neutrinos.acceptNeutrinos(); // How do we know these come from the w boson?!?!?
+      declare(neutrinos, "Neutrinos");
+      */
+      
+      DressedLeptons dressedElectrons(photons, promptElectrons, 0.1, e_muCuts, false);
+      //^^use decay photons*? final state?? eh?
+      //*DressedLeptons::DressedLeptons(const FinalState& photons, const FinalState& bareleptons,
+      //                                double dRmax, const Cut& cut, bool useDecayPhotons)
+      declare(dressedElectrons, "DressedElectrons");
+      
+      DressedLeptons dressedMuons(photons, promptMuons, 0.1, e_muCuts, false);
+      declare(dressedMuons, "DressedMuons");
 
+      VetoedFinalState jet_input(fs);
+      jet_input.addVetoOnThisFinalState(dressedElectrons);
+      jet_input.addVetoOnThisFinalState(dressedMuons);
+      //jet_input.addVetoOnThisFinalState(neutrinos);
+      //jet_input.vetoNeutrinos();
+      declare(jet_input, "Jet_Input");
 
-
+      // projection for jets
+      declare(FastJets(jet_input, FastJets::ANTIKT, 0.4), "Jets");
 
       // Projection for Parton Level Top Quarks
-      declare(PartonicTops(PartonicTops::E_MU, lepCuts), "leptonicTops") ;
-      //      declare(PartonicTops(PartonicTops::MUON, lepCuts), "MuonPartonTops") ;
-      
-      // Projection for jets
-      declare(FastJets(fs, FastJets::ANTIKT, 0.4), "Jets");
+      declare(PartonicTops(PartonicTops::E_MU, e_muCuts), "leptonicTops") ;
 
+      
       // Book histograms
-      _c_fidt    = bookCounter("fidTotXsectq");
-      _c_fidtbar = bookCounter("fidTotXsectbarq");
-      //      _c_2btag = bookCounter("2BTag");
-      //_c_ttbarEMuPairsOppChar_partonic = bookCounter("emupairsOppChar_partonic");
-      //_c_error_e  = bookCounter("error_e");
-      //_c_error_mu = bookCounter("error_mu");
-     
+      _c_fid_t    = bookCounter("fidTotXsectq");
+      _c_fid_tbar = bookCounter("fidTotXsectbarq");
+      _h_diffXsecParticlePt_t    = bookHisto1D(1,1,1);
+      // _h_diffXsecParticlePt_tbar = bookHisto1D("diffXsecParticlePt_tbar");
+      //_h_diffXsecParticleY_t = bookHisto1D("diffXsecParticleY_tq");
+      //_h_diffXsecParticleY_tbar = bookHisto1D("diffXsecParticleY_tbarq");
+
+      
+      // debug hepmc print-out
       _hepmcout.reset(new HepMC::IO_GenEvent("inspectevents.hepmc"));    
+
     }
 
 
     /// Perform the per-event analysis
     void analyze(const Event& event) {
 
-
-      const Particles& electrons = apply<IdentifiedFinalState>(event, "Electrons").particlesByPt();
-      const Particles& muons =     apply<IdentifiedFinalState>(event, "Muons").particlesByPt();
-
-      const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();
-      //      const Particles leptons = apply<ParticleFinder>(event, "leptonTop") ;
-
-
-      //const Particles muonpartontops     = apply<ParticleFinder>(event, "MuonPartonTops").particlesByPt();
+      // Find leptons, bosons and jets
+      const Particles& electrons = apply<IdentifiedFinalState>(event, "DressedElectrons").particlesByPt();
+      const Particles& muons =     apply<IdentifiedFinalState>(event, "DressedMuons").particlesByPt();
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
-      
       const WFinder& w_el = apply<WFinder>(event, "W_Electron");
-      const Particles w_elP= w_el.bosons();
       const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
+      const Particles w_elP= w_el.bosons();
       const Particles w_muP= w_el.bosons();
- 
-      
-	//const FourMomentum w_mu4p = w_mu.boson() ;
-      //const Particles tempparts = w_el.bosons() ;
-      // cout << "tempparts.size()" << tempparts.size() <<endl;
-      // const FourMomentum w_els4p = w_mu.bosons() ;
+      const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();      
 
-      //      cout <<" w_els4p.size()=" <<  w_els4p.size() << endl;
-      // cout <<" w_mus4p.size()=" <<  w_mus4p.size() << endl;
-      
-      //Particles selectedElectrons, selectedMuons;
-      //bool tooClose = false;
-     
-      
-      // find jets in fiducial pT and eta ranges
+      /// Particle-level analysis
+      // find particle-level jets
       Cut jetCuts = Cuts::abseta < 4.5 && Cuts::pT > 30*GeV ;
-      ifilter_select(jets, jetCuts ) ;
-      if ( jets.size() != 2 ) {
-	N4;
-	RET;
-	vetoEvent ;
-      }
+      ifilter_select(jets, jetCuts);
+      
       // find and count b-jets
       Jet bJet;
-      int b = 0 ;
+      int b=0; // b-jet counter
+      
       for (const Jet& j : jets){
+	
 	if ( j.bTagged() ) {
 	  b++ ;
-	  if (b == 2) {N5; RET; vetoEvent;}
 	  bJet = j;
 	}
       }
-      if ( b == 0 ) {RET; vetoEvent;} // this implies there must be 2 jets of which only one is b-tagged
-
-
-      FourMomentum wp4;
-      if ( w_elP.size() + w_muP.size() != 0){
-
-	//	cout << "W-el=" << w_elP.size() << " " ;
-	//cout << "W-mu=" << w_muP.size() << " " ;
-	if       ( w_elP.size() == 1 ) const FourMomentum w4p = w_elP[0] ;
-	else if  ( w_muP.size() == 1 ) const FourMomentum w4p = w_muP[0] ;
-	else N6; //hmmm
-	RET;
-	vetoEvent;
-      }
       
-      //	if (j.pT() > 25*GeV && j.abseta() < 2.5) selectedJets.push_back(j);
+      if ( b==1 && electrons.size()+muons.size()==1 && jets.size()==2 ){
+	
+	// Then this implies there must be 2 jets of which only one is b-tagged and
+	// there is exactly one particle level electron or muon in the event.
 
-      // find invariant mass of lepton-b-jet system
-      const FourMomentum bJt4p = bJet ;
-      const FourMomentum pseudoTopp4 = bJt4p + wp4;
+	// Find the lepton
+	Particle lepton;
+	if (electrons.size() == 1) lepton = electrons[0];
+	else lepton = muons[0];
 
+	// make particle-level cut on the mass of lepton + b-jet system
 
-      //const FourMomentum lep4p = leptonicTops[0] ;
-      //const FourMomentum lepBJt4p = bJt4p + lep4p ;
-      //if ( lepBJt4p.mass() < 160*GeV ){
-      //	N3; RET; vetoEvent ;
-      //}
+	const FourMomentum lep4p = lepton;
+	const FourMomentum bj4p = bJet;
+	const FourMomentum lb4p = lep4p + bj4p;
 
-            
-      if ( leptonicTops.size() != 1 ){ N7; RET; vetoEvent;}
-      else {
-	const bool charge = leptonicTops[0].charge() > 0 ;
+	if ( lb4p.mass() < 160*GeV ){ // construct pseudo-top from implicit w-boson
 
-	  if (charge){
-	    _c_fidt   ->fill(event.weight());
-	  } else {
-	    _c_fidtbar->fill(event.weight());
+	  FourMomentum w4p;
+	  
+	  if ( w_elP.size() + w_muP.size() == 1){
+	  
+	    //cout << "W-el=" << w_elP.size() << " " ;
+	    //cout << "W-mu=" << w_muP.size() << " " ;
+	    if   ( w_elP.size() == 1 ) w4p = w_elP[0] ;
+	    else if ( w_muP.size() == 1 ) w4p = w_muP[0] ;
+	    else {N1; RET; vetoEvent;}
+	  // this is a problem!
+	  // ^^required veto so code doesn't crash when doing:
+	  // const FourMomentum pseudoTopp4 = bJt4p + wp4;
+	
+	  const FourMomentum pseudoTop4p = bj4p + w4p;
+
+	  if (lepton.charge() > 0){ // fill top-quark histos
+
+	    _c_fid_t->fill(event.weight()) ;
+	    _h_diffXsecParticlePt_t->fill( pseudoTop4p.pT(), event.weight()) ;
+	    //_h_diffXsecParticleY_t->fill( pseudoTop4p.absrap(), event.weight()) ;
+	    
+	  } else { // Fill anti top-quark histos
+	    
+	    _c_fid_tbar->fill(event.weight()) ;
+	    //_h_diffXsecParticlePt_tbar->fill( pseudoTop4p.pT(), event.weight()) ;
+	    //_h_diffXsecParticleY_tbar->fill( pseudoTop4p.absrap(), event.weight()) ;
 	  }
-      }
+	  } else {N2;}
+	} else {N3;}
+      } else {N4;}
+    
+      /// Parton-level analysis
+      if ( leptonicTops.size() != 1 ){ N2; RET; vetoEvent;}
+        
+
       
-
-
       /*
     //      cout << "re:" << electrons.size() << " rm:" << muons.size() << " ";
       //      cout << "pe:" << electronpartontops.size() << " pm:" << muonpartontops.size() << " ";
@@ -294,16 +320,18 @@ namespace Rivet {
 
       }
 */
-      N9;
-      RET;
+      
     }
 
 
     /// Normalise histograms etc., after the run
     void finalize() {
       double SF = crossSection()*picobarn/sumOfWeights();  // scale factor
-      scale(_c_fidt, SF);
-      scale(_c_fidtbar, SF);
+      scale(_c_fid_t, SF);
+      scale(_c_fid_tbar, SF);
+      scale(_h_diffXsecParticlePt_t, SF);
+      scale(_h_diffXsecParticlePt_tbar, SF);
+     
       /*
       double BR = 0.032; // branching ratio
       double SF = crossSection()*picobarn/sumOfWeights()/BR;  // scale factor
@@ -329,7 +357,8 @@ namespace Rivet {
 
     /// @name Histograms
     //@{
-    CounterPtr _c_fidt, _c_fidtbar;
+    CounterPtr _c_fid_t, _c_fid_tbar;
+    Histo1DPtr _h_diffXsecParticlePt_t, _h_diffXsecParticlePt_tbar, _h_diffXsecParticleY_t,_h_diffXsecParticleY_tbar;
     //@}
 
     std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;
