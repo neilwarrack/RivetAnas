@@ -130,7 +130,7 @@ namespace Rivet {
       // Book histograms
       _c_fid_t    = bookCounter("fidTotXsectq");
       _c_fid_tbar = bookCounter("fidTotXsectbarq");
-      _h_diffXsecParticlePt_t    = bookHisto1D(1,1,1);
+      //      _h_diffXsecParticlePt_t    = bookHisto1D(1,1,1);
       // _h_diffXsecParticlePt_tbar = bookHisto1D("diffXsecParticlePt_tbar");
       //_h_diffXsecParticleY_t = bookHisto1D("diffXsecParticleY_tq");
       //_h_diffXsecParticleY_tbar = bookHisto1D("diffXsecParticleY_tbarq");
@@ -146,8 +146,8 @@ namespace Rivet {
     void analyze(const Event& event) {
 
       // Find leptons, bosons and jets
-      const Particles& electrons = apply<IdentifiedFinalState>(event, "DressedElectrons").particlesByPt();
-      const Particles& muons =     apply<IdentifiedFinalState>(event, "DressedMuons").particlesByPt();
+      const Particles& electrons = apply<DressedLeptons>(event, "DressedElectrons").particlesByPt();
+      const Particles& muons =     apply<DressedLeptons>(event, "DressedMuons").particlesByPt();
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
       const WFinder& w_el = apply<WFinder>(event, "W_Electron");
       const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
@@ -184,13 +184,13 @@ namespace Rivet {
 
 	// make particle-level cut on the mass of lepton + b-jet system
 
-	const FourMomentum lep4p = lepton;
-	const FourMomentum bj4p = bJet;
-	const FourMomentum lb4p = lep4p + bj4p;
+	FourMomentum lep4p = lepton;
+	FourMomentum bj4p = bJet;
+	FourMomentum lb4p = lep4p + bj4p;
 
 	if ( lb4p.mass() < 160*GeV ){ // construct pseudo-top from implicit w-boson
 
-	  FourMomentum w4p;
+	FourMomentum w4p;
 	  
 	  if ( w_elP.size() + w_muP.size() == 1){
 	  
@@ -208,7 +208,7 @@ namespace Rivet {
 	  if (lepton.charge() > 0){ // fill top-quark histos
 
 	    _c_fid_t->fill(event.weight()) ;
-	    _h_diffXsecParticlePt_t->fill( pseudoTop4p.pT(), event.weight()) ;
+	    //    _h_diffXsecParticlePt_t->fill( pseudoTop4p.pT(), event.weight()) ;
 	    //_h_diffXsecParticleY_t->fill( pseudoTop4p.absrap(), event.weight()) ;
 	    
 	  } else { // Fill anti top-quark histos
