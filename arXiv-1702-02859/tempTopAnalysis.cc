@@ -30,7 +30,16 @@
 namespace Rivet {
 
 
-  /// @brief What it is, what it is
+  /// @brief
+  /// 1) Total and fiducial cross-section measurements for single top quark and
+  /// single top antiquark production in pp collisions at 8*TeV.
+  /// 2) Ratio of measured total cross-section for top quark to top antiquark
+  /// production in the t-channel (??) 
+  /// 3) Normalised differential cross-sections and absolute differential
+  /// cross-sections for single top quark and top antiquark production at
+  /// particle and parton level as a function of quark ransverse momentum p_T
+  /// and absolute value of rapidity Y.
+  
   class tempTopAnalysis : public Analysis {
   public:
 
@@ -130,7 +139,7 @@ namespace Rivet {
       // Book histograms
       _c_fid_t    = bookCounter("fidTotXsectq");
       _c_fid_tbar = bookCounter("fidTotXsectbarq");
-      //      _h_diffXsecParticlePt_t    = bookHisto1D(1,1,1);
+      _h_AbsPtclDiffXsecTPt    = bookHisto1D(1,1,1);
       // _h_diffXsecParticlePt_tbar = bookHisto1D("diffXsecParticlePt_tbar");
       //_h_diffXsecParticleY_t = bookHisto1D("diffXsecParticleY_tq");
       //_h_diffXsecParticleY_tbar = bookHisto1D("diffXsecParticleY_tbarq");
@@ -152,7 +161,7 @@ namespace Rivet {
       const WFinder& w_el = apply<WFinder>(event, "W_Electron");
       const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
       const Particles w_elP= w_el.bosons();
-      const Particles w_muP= w_el.bosons();
+      const Particles w_muP= w_mu.bosons();
       const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();      
 
       /// Particle-level analysis
@@ -173,7 +182,7 @@ namespace Rivet {
       }
       
       if ( b==1 && electrons.size()+muons.size()==1 && jets.size()==2 ){
-	
+	N3;	
 	// Then this implies there must be 2 jets of which only one is b-tagged and
 	// there is exactly one particle level electron or muon in the event.
 
@@ -189,13 +198,18 @@ namespace Rivet {
 	FourMomentum lb4p = lep4p + bj4p;
 
 	if ( lb4p.mass() < 160*GeV ){ // construct pseudo-top from implicit w-boson
+	  N4;
+	  FourMomentum w4p;
 
-	FourMomentum w4p;
-	  
+
+	  // cout << "W-el=" << w_elP.size() << ", " ;
+	  // cout << "W-mu=" << w_muP.size() << " " ;
+	  //cout << w_el.constituentLepton().pid() << " ";
+	  //	  cout << w_mu.constituentLepton().pid() ;
+	  //if ( w_elP.size() != w_muP.size() ) WORRY;
+
 	  if ( w_elP.size() + w_muP.size() == 1){
-	  
-	    //cout << "W-el=" << w_elP.size() << " " ;
-	    //cout << "W-mu=" << w_muP.size() << " " ;
+	    N5;
 	    if   ( w_elP.size() == 1 ) w4p = w_elP[0] ;
 	    else if ( w_muP.size() == 1 ) w4p = w_muP[0] ;
 	    else {N1; RET; vetoEvent;}
@@ -206,25 +220,44 @@ namespace Rivet {
 	  const FourMomentum pseudoTop4p = bj4p + w4p;
 
 	  if (lepton.charge() > 0){ // fill top-quark histos
-
+	    N8;
 	    _c_fid_t->fill(event.weight()) ;
-	    //    _h_diffXsecParticlePt_t->fill( pseudoTop4p.pT(), event.weight()) ;
+	    _h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(), event.weight()) ;
 	    //_h_diffXsecParticleY_t->fill( pseudoTop4p.absrap(), event.weight()) ;
 	    
 	  } else { // Fill anti top-quark histos
-	    
+	    N9;
 	    _c_fid_tbar->fill(event.weight()) ;
 	    //_h_diffXsecParticlePt_tbar->fill( pseudoTop4p.pT(), event.weight()) ;
 	    //_h_diffXsecParticleY_tbar->fill( pseudoTop4p.absrap(), event.weight()) ;
 	  }
-	  } else {N2;}
-	} else {N3;}
-      } else {N4;}
-    
-      /// Parton-level analysis
-      if ( leptonicTops.size() != 1 ){ N2; RET; vetoEvent;}
-        
+	  }
+	}
+	RET;
+      }
 
+      /// Parton-level analysis
+      //      if ( leptonicTops.size() != 1 ){ N2; RET; vetoEvent;}
+
+
+
+
+
+
+
+      
+      ////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+      
       
       /*
     //      cout << "re:" << electrons.size() << " rm:" << muons.size() << " ";
@@ -358,7 +391,7 @@ namespace Rivet {
     /// @name Histograms
     //@{
     CounterPtr _c_fid_t, _c_fid_tbar;
-    Histo1DPtr _h_diffXsecParticlePt_t, _h_diffXsecParticlePt_tbar, _h_diffXsecParticleY_t,_h_diffXsecParticleY_tbar;
+    Histo1DPtr _h_diffXsecParticlePt_t, _h_diffXsecParticlePt_tbar, _h_diffXsecParticleY_t,_h_diffXsecParticleY_tbar, _h_AbsPtclDiffXsecTPt;
     //@}
 
     std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;
