@@ -133,13 +133,28 @@ namespace Rivet {
       declare(FastJets(jet_input, FastJets::ANTIKT, 0.4), "Jets");
 
       // Projection for Parton Level Top Quarks
-      declare(PartonicTops(PartonicTops::E_MU, e_muCuts), "leptonicTops") ;
-
+      declare(PartonicTops(PartonicTops::E_MU, e_muCuts), "LeptonicTops") ;
+      declare(PartonicTops(PartonicTops::ALL, e_muCuts), "AllPartonicTops");
       
-      // Book histograms
+      // Book counters
       _c_fid_t    = bookCounter("fidTotXsectq");
       _c_fid_tbar = bookCounter("fidTotXsectbarq");
-      _h_AbsPtclDiffXsecTPt    = bookHisto1D(1,1,1);
+
+      // book histograms
+      // top quark differential cross sections
+      _h_AbsPtclDiffXsecTPt   = bookHisto1D(1,1,1);
+      _h_AbsPtclDiffXsecTY    = bookHisto1D(1,1,2);
+      _h_NrmPtclDiffXsecTPt   = bookHisto1D(2,1,1);
+      _h_NrmPtclDiffXsecTY    = bookHisto1D(2,1,2);
+
+      // top antiquark differential cross sections
+      _h_AbsPtclDiffXsecTbarPt   = bookHisto1D(1,1,3);
+      _h_AbsPtclDiffXsecTbarY    = bookHisto1D(1,1,4);
+      _h_NrmPtclDiffXsecTbarPt   = bookHisto1D(2,1,3);
+      _h_NrmPtclDiffXsecTbarY    = bookHisto1D(2,1,4);
+
+      _h_AbsPtonDiffXsecTPt = bookHisto1D(3,1,1);
+      
       // _h_diffXsecParticlePt_tbar = bookHisto1D("diffXsecParticlePt_tbar");
       //_h_diffXsecParticleY_t = bookHisto1D("diffXsecParticleY_tq");
       //_h_diffXsecParticleY_tbar = bookHisto1D("diffXsecParticleY_tbarq");
@@ -162,9 +177,12 @@ namespace Rivet {
       const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
       const Particles w_elP= w_el.bosons();
       const Particles w_muP= w_mu.bosons();
-      const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();      
+      const Particles leptonicTops = apply<ParticleFinder>(event, "LeptonicTops").particlesByPt();
+      const Particles allPartonicTops = apply<ParticleFinder>(event, "AllPartonicTops").particlesByPt();
 
       /// Particle-level analysis
+      bool particleVeto = false;
+      
       // find particle-level jets
       Cut jetCuts = Cuts::abseta < 4.5 && Cuts::pT > 30*GeV ;
       ifilter_select(jets, jetCuts);
@@ -182,7 +200,7 @@ namespace Rivet {
       }
       
       if ( b==1 && electrons.size()+muons.size()==1 && jets.size()==2 ){
-	N3;	
+	//N3;	
 	// Then this implies there must be 2 jets of which only one is b-tagged and
 	// there is exactly one particle level electron or muon in the event.
 
@@ -198,7 +216,7 @@ namespace Rivet {
 	FourMomentum lb4p = lep4p + bj4p;
 
 	if ( lb4p.mass() < 160*GeV ){ // construct pseudo-top from implicit w-boson
-	  N4;
+	  //N4;
 	  FourMomentum w4p;
 
 
@@ -212,35 +230,58 @@ namespace Rivet {
 	    N5;
 	    if   ( w_elP.size() == 1 ) w4p = w_elP[0] ;
 	    else if ( w_muP.size() == 1 ) w4p = w_muP[0] ;
-	    else {N1; RET; vetoEvent;}
-	  // this is a problem!
-	  // ^^required veto so code doesn't crash when doing:
-	  // const FourMomentum pseudoTopp4 = bJt4p + wp4;
-	
-	  const FourMomentum pseudoTop4p = bj4p + w4p;
+	    else {particleVeto = true;}
 
-	  if (lepton.charge() > 0){ // fill top-quark histos
-	    N8;
-	    _c_fid_t->fill(event.weight()) ;
-	    _h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(), event.weight()) ;
-	    //_h_diffXsecParticleY_t->fill( pseudoTop4p.absrap(), event.weight()) ;
-	    
-	  } else { // Fill anti top-quark histos
-	    N9;
-	    _c_fid_tbar->fill(event.weight()) ;
-	    //_h_diffXsecParticlePt_tbar->fill( pseudoTop4p.pT(), event.weight()) ;
-	    //_h_diffXsecParticleY_tbar->fill( pseudoTop4p.absrap(), event.weight()) ;
+	    if (!particleVeto){
+	      
+	      const FourMomentum pseudoTop4p = bj4p + w4p;
+	      
+	      if (lepton.charge() > 0){ // fill top-quark histos
+		N7;
+		_c_fid_t->fill(event.weight()) ;
+		
+		_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+		_h_NrmPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_NrmPtclDiffXsecTPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+		
+	      } else { // Fill anti top-quark histos
+		N8;
+		_c_fid_tbar->fill(event.weight()) ;
+		
+		_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+		_h_NrmPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_NrmPtclDiffXsecTbarPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+	      }
+	    }
 	  }
-	  }
+	  else if ( w_elP.size() + w_muP.size() > 1) WORRY;
 	}
-	RET;
+	//RET;
       }
-
+    
       /// Parton-level analysis
-      //      if ( leptonicTops.size() != 1 ){ N2; RET; vetoEvent;}
+      bool partonVeto = false;
 
+      // find partonic tops
+      if ( allPartonicTops.size() != 1 ) partonVeto = true ;
+      else {
+	if (leptonicTops[0].charge() > 0){ // fill top-quark histos
+	N9;
+	_h_AbsPtonDiffXsecTPt->fill(leptonicTops[0].pT(), event.weight());
+	} else {N9;}
+	
+      }
+    
+      if (partonVeto) WORRY;    
+      else RET;
 
-
+    }
 
 
 
@@ -352,19 +393,31 @@ namespace Rivet {
 	} else { N2; RET; vetoEvent; }
 
       }
+      }
 */
       
-    }
+    
 
 
     /// Normalise histograms etc., after the run
     void finalize() {
-      double SF = crossSection()*picobarn/sumOfWeights();  // scale factor
+
+      double SF = crossSection()/femtobarn/sumOfWeights();  // scale factor
+
       scale(_c_fid_t, SF);
       scale(_c_fid_tbar, SF);
-      scale(_h_diffXsecParticlePt_t, SF);
-      scale(_h_diffXsecParticlePt_tbar, SF);
-     
+
+      scale(_h_AbsPtclDiffXsecTPt, SF);
+      scale(_h_AbsPtclDiffXsecTY, SF);
+      scale(_h_AbsPtclDiffXsecTbarPt, SF);
+      scale(_h_AbsPtclDiffXsecTbarY, SF);
+      scale(_h_AbsPtonDiffXsecTPt, SF);
+      
+      //      normalize(_h_NrmPtclDiffXsecTPt);
+      //(_h_NrmPtclDiffXsecTY, SF);
+      // scale(_h_NrmPtclDiffXsecTbarPt, SF);
+      //scale(_h_NrmPtclDiffXsecTbarY, SF);
+
       /*
       double BR = 0.032; // branching ratio
       double SF = crossSection()*picobarn/sumOfWeights()/BR;  // scale factor
@@ -383,7 +436,7 @@ namespace Rivet {
 
       _hepmcout->clear(); _hepmcout.reset();
       */
-    }
+      }
 
     //@}
 
@@ -391,7 +444,13 @@ namespace Rivet {
     /// @name Histograms
     //@{
     CounterPtr _c_fid_t, _c_fid_tbar;
-    Histo1DPtr _h_diffXsecParticlePt_t, _h_diffXsecParticlePt_tbar, _h_diffXsecParticleY_t,_h_diffXsecParticleY_tbar, _h_AbsPtclDiffXsecTPt;
+    Histo1DPtr _h_AbsPtclDiffXsecTPt, _h_AbsPtclDiffXsecTY,
+      _h_NrmPtclDiffXsecTPt, _h_NrmPtclDiffXsecTY,
+      _h_AbsPtclDiffXsecTbarPt, _h_AbsPtclDiffXsecTbarY,
+      _h_NrmPtclDiffXsecTbarPt,  _h_NrmPtclDiffXsecTbarY,
+      _h_AbsPtonDiffXsecTPt;
+
+
     //@}
 
     std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;
