@@ -13,3 +13,4 @@ Question: should we use decay photons on dressed leptons? YES! These are (from r
 
 Q: do we need heParticles AND the bool use decay photons? becuas ethey both are trying to get ride of (check!) photons from hadronic decays?
 
+NB: THERE's A (Tools/ParticleUtils.hh) fromHadron() function!!! (photons!!)
