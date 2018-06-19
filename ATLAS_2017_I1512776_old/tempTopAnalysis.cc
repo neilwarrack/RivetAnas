@@ -86,7 +86,7 @@ namespace Rivet {
       //      declare(electron_fs, "Electrons");
       PromptFinalState promptElectrons(electron_fs, true, false);
       DressedLeptons dressedElectrons(photons, promptElectrons, 0.1, e_muCuts, false);
-      //^^use decay photons*? final state?? eh?
+      //^^use decay photons*? 
       //*DressedLeptons::DressedLeptons(const FinalState& photons, const FinalState& bareleptons,
       //                                double dRmax, const Cut& cut, bool useDecayPhotons)
       declare(dressedElectrons, "DressedElectrons");
@@ -94,9 +94,8 @@ namespace Rivet {
       /// Muons
       IdentifiedFinalState muon_fs;
       muon_fs.acceptIdPair(PID::MUON);
-      declare(muon_fs, "Muons");
+      //declare(muon_fs, "Muons");
       PromptFinalState promptMuons(muon_fs, true, false);
-      
       DressedLeptons dressedMuons(photons, promptMuons, 0.1, e_muCuts, false);
       declare(dressedMuons, "DressedMuons");
 
@@ -127,11 +126,17 @@ namespace Rivet {
       */
       
       VetoedFinalState jet_input(fs);
+      /*
+      jet_input.addVetoOnThisFinalState(dressedElectrons.photons());
+      jet_input.addVetoOnThisFinalState(dressedElectrons.bareLepton());
+      jet_input.addVetoOnThisFinalState(dressedMuons.photons());
+      jet_input.addVetoOnThisFinalState(dressedMuons.bareLepton());
+      */
       jet_input.addVetoOnThisFinalState(dressedElectrons);
       jet_input.addVetoOnThisFinalState(dressedMuons);
       //jet_input.addVetoOnThisFinalState(neutrinos);
       //jet_input.vetoNeutrinos();
-      declare(jet_input, "Jet_Input");
+      //declare(jet_input, "Jet_Input");
 
       // projection for jets
       declare(FastJets(jet_input, FastJets::ANTIKT, 0.4), "Jets");
@@ -193,13 +198,13 @@ namespace Rivet {
       
       // find jets
       Cut jetCuts = Cuts::abseta < 4.5 && Cuts::pT > 30*GeV ;
-      //cout << "sizeOfJets1=" << jets.size()<< " "; RET;
+      cout << "sizeOfJets1=" << jets.size()<< " "; RET;
       ifilter_select(jets, jetCuts);
-      //cout << "sizeOfJets2=" << jets.size()<< " "; RET;
+      cout << "sizeOfJets2=" << jets.size()<< " "; RET;
 
       // Find the leptons
-      //cout << "muons.size()=" << muons.size(); RET;
-      //cout << "electrons.size()=" << electrons.size(); RET;
+      cout << "muons.size()=" << muons.size(); RET;
+      cout << "electrons.size()=" << electrons.size(); RET;
       Particles leptons;
       for (const Particle& e : electrons){
 	leptons.push_back(e);
@@ -207,37 +212,43 @@ namespace Rivet {
       for (const Particle& m : muons){
 	leptons.push_back(m);
       }
-      //      cout << "leptons.size()=" << leptons.size(); RET;
+      cout << "leptons.size()=" << leptons.size(); RET;
 
       // isolate jets and leptons
       bool tooClose= false;;
       
-      for (const Jet& j : jets){
-
-      for (const Particle& l : leptons){
-	if (deltaR(j, l) < 0.4) tooClose = true ;
+      if (!leptons.empty() && !jets.empty()){
+	for (const Jet& j : jets){
+	  
+	  for (const Particle& l : leptons){
+	    
+	    if (deltaR(j, l) < 0.4) tooClose = true ;
+	  }
+	  if (tooClose) particleVeto = true;
+	  tooClose = false;      
+	}
       }
-      if (tooClose) particleVeto = true;
-      tooClose = false;      
-      }
+      
       
       // find and count b-jets
       Jet bJet;
       int b=0;
       
       for (const Jet& j : jets){
-	if ( j.bTagged() && j.abseta() < 2.5) {
+	
+	if ( j.bTagged(Cuts::pT > 5*GeV) && j.abseta() < 2.5) {
 	  b++ ;
 	  bJet = j;
 	}
       }
 
-      if(leptons.size() != 1) {
-	if(b!=1) N2;
-	if(jets.size() != 2) N4;
-	if(particleVeto) N5;
-      }
-      
+
+      if(leptons.size() != 1) {N2;RET; vetoEvent;}
+      else if(b!=1) {N3;RET;vetoEvent;}
+      else if(jets.size() != 2) {N4;RET;vetoEvent;}
+      else if(particleVeto) {N5;RET;vetoEvent;} // lepton too close to a jet
+    
+
       if ( b==1 && leptons.size() == 1 && jets.size() == 2 && !particleVeto ){
 	
 	// Then this implies there must be 2 jets of which only one is
@@ -250,7 +261,7 @@ namespace Rivet {
 	FourMomentum lb4p = lepton4p + bJet4p;
 	
 	if ( lb4p.mass() < 160*GeV ) particleVeto = true;
-	
+	if(particleVeto) {N6;RET;vetoEvent;}
 	FourMomentum w4p;
 	
 	
@@ -272,7 +283,7 @@ namespace Rivet {
 	      const FourMomentum pseudoTop4p = bJet4p + w4p;
 	      
 	      if (leptons[0].charge() > 0){ // fill top-quark histos
-		N8;
+		N7;
 		_c_fid_t->fill(event.weight()) ;
 		
 		_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
@@ -295,37 +306,43 @@ namespace Rivet {
 	      }
 	    }
 	  }
-	  else if ( w_elP.size() + w_muP.size() > 1) N1;
-	} //< end of particle-level analysis 
-	//cout << "particleVeto=" << particleVeto;
+	  else if ( w_elP.size() + w_muP.size() > 1) {N1;}
+      } //< end of particle-level analysis 
+            cout << "particleVeto=" << particleVeto;RET;
 
 	
-	/// Parton-level analysis
-	bool partonVeto = false;
-	
-	// find partonic tops
-	
-	if ( !allPartonicTops.empty() ){
-	  //cout << "-Number of Tops:" << allPartonicTops.size(); RET;
-	  if ( allPartonicTops.size() != 1 ) {
-	    partonVeto = true ;
-	  } else {
-	   
-	    if (allPartonicTops[0].pid() > 0){ // fill top-quark histos
-	      //cout << "q-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();
-	      N9;
-	      //_h_AbsPtonDiffXsecTPt->fill(leptonicTops[0].pT(), event.weight());
-	    } else {
-	      //cout << "qbar-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();
-	      N9;
-	    }
-	    
-	  }
+      /// Parton-level analysis
+      bool partonVeto = false;
+      
+      // find partonic tops
+      
+      if ( !allPartonicTops.empty() ){
+	cout << "-Number of Tops:" << allPartonicTops.size(); RET;
+	if ( allPartonicTops.size() != 1 ) {
+	  partonVeto = true ;
+	} else {
 
 	  
-	} else {N1;}
-	RET;
-    }
+	  if (allPartonicTops[0].pid() > 0){ // fill top-quark histos
+	    //N7;
+	    cout << "q-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();RET;
+
+	    //	    _h_AbsPtonDiffXsecTPt->fill(leptonicTops[0].pT(), event.weight());
+	  }
+	  if (allPartonicTops[0].pid() < 0){ // fill top-antiquark histos
+	    //N8;
+	    cout << "qbar-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();
+	   
+	  }
+	}
+      }
+      
+    
+	
+	
+      
+      RET;
+    }//< end of analyze()
     
     
 
