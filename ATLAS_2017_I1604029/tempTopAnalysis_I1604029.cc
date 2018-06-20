@@ -461,6 +461,27 @@ namespace Rivet {
       */
 
 
+      
+      //////////////////// HEPMC OUT (START) ////////////////////////////////
+      if ( selectedElectrons.size() + selectedMuons.size() != 1 )
+      {                   //
+	cout << "   !!!" << endl;                                          //
+	//	_c_error_e->fill(event.weight()); //error counter                  //
+	                                                                   //
+	// print event record to file                                      //
+	const HepMC::GenEvent* ge = event.genEvent();                      //
+	if (ge == nullptr) {cout << "nullpointer found: GenEvent*"<<endl;  //
+	} else { //if (ge != nullptr)                                      //
+	  ge->print(); // sends (formatted) HepMC event to screen          //
+	  _hepmcout->write_event(ge); // writes to file                    //
+	}                                                                  //
+      }                                                                    //
+ 
+      //////////////////// HEPMC OUT (END) //////////////////////////////////
+
+
+
+      
       /// event selection in fiducial phase space based on the above object collections.
       //cout << "VetoCode:"; RET;
       ////////////////////////////////////////////////////////////////////////////////////
