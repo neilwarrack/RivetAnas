@@ -5,6 +5,7 @@
 #include "Rivet/Projections/FastJets.hh"
 #include "Rivet/Projections/FinalState.hh"
 #include "Rivet/Projections/IdentifiedFinalState.hh"
+#include "Rivet/Projections/MissingMomentum.hh"
 #include "Rivet/Projections/PartonicTops.hh"
 #include "Rivet/Projections/PromptFinalState.hh"
 #include "Rivet/Projections/WFinder.hh"
@@ -46,10 +47,10 @@ namespace Rivet {
     /// Constructor
     DEFAULT_RIVET_ANALYSIS_CTOR(tempTopAnalysis);
 
-
+   
     /// @name Analysis methods
     //@{
-
+   
     /// Book histograms and initialise projections before the run
     void init() {
 
@@ -57,8 +58,9 @@ namespace Rivet {
 
       // Particle-level electron and muon cuts
       Cut e_muCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV ;
-     
-      // Cut muCuts  = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;    
+      MissingMomentum missmom(fs);
+      declare(missmom, "Missp4");
+      //      Cut eCuts  = Cuts::abseta < 2.47 && (Cuts::abseta < 1.37 || Cuts::abseta > 1.52);    
       //Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
 
       //      if (fuzzyEquals(sqrtS(), 7*TeV)) {
@@ -68,21 +70,36 @@ namespace Rivet {
       //      } 
 
       
-      //IdentifiedFinalState electron_fs(lepCuts, PID::ELECTRON);
+
       
-      // Project (particle level) prompt final state electrons and muons*
-      // *(including from tau decays but not from muon decays -- see bools) 
+      /// Project (particle level) prompt final state electrons and muons*
+      /// *(including from tau decays but not from muon decays -- see PromptFinalState bools) 
+
+      // Projection to dress leptons for lepton and jet definitions
+      IdentifiedFinalState photons(fs);
+      photons.acceptIdPair(PID::PHOTON);
+      declare(photons, "Photons");
+
       /// Electrons
       IdentifiedFinalState electron_fs;
       electron_fs.acceptIdPair(PID::ELECTRON);
-      declare(electron_fs, "Electrons");
+      //      declare(electron_fs, "Electrons");
       PromptFinalState promptElectrons(electron_fs, true, false);
+      DressedLeptons dressedElectrons(photons, promptElectrons, 0.1, e_muCuts, false);
+      //^^use decay photons*? 
+      //*DressedLeptons::DressedLeptons(const FinalState& photons, const FinalState& bareleptons,
+      //                                double dRmax, const Cut& cut, bool useDecayPhotons)
+      declare(dressedElectrons, "DressedElectrons");
+
       /// Muons
       IdentifiedFinalState muon_fs;
       muon_fs.acceptIdPair(PID::MUON);
-      declare(muon_fs, "Muons");
+      //declare(muon_fs, "Muons");
       PromptFinalState promptMuons(muon_fs, true, false);
+      DressedLeptons dressedMuons(photons, promptMuons, 0.1, e_muCuts, false);
+      declare(dressedMuons, "DressedMuons");
 
+      
       // Projections for (particle level) W boson to define (pseudo) top quark.
       WFinder w_electron(electron_fs, 
 			 e_muCuts, 
@@ -98,11 +115,6 @@ namespace Rivet {
 
       WFinder w_muon(muon_fs,  e_muCuts, PID::MUON, 35*GeV, 100*GeV, 30*GeV, 0.1, WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY, WFinder::TRACK, WFinder::TRANSMASS); 
       declare(w_muon, "W_Muon");
-
-      // Projections to find jets
-      IdentifiedFinalState photons(fs);
-      photons.acceptIdPair(PID::PHOTON);
-      declare(photons, "Photons");
       /*
       IdentifiedFinalState leptons(fs);
       leptonfs.acceptIdPairs({PID::ELECTRON, PID::MUON});
@@ -113,33 +125,47 @@ namespace Rivet {
       declare(neutrinos, "Neutrinos");
       */
       
-      DressedLeptons dressedElectrons(photons, promptElectrons, 0.1, e_muCuts, false);
-      //^^use decay photons*? final state?? eh?
-      //*DressedLeptons::DressedLeptons(const FinalState& photons, const FinalState& bareleptons,
-      //                                double dRmax, const Cut& cut, bool useDecayPhotons)
-      declare(dressedElectrons, "DressedElectrons");
-      
-      DressedLeptons dressedMuons(photons, promptMuons, 0.1, e_muCuts, false);
-      declare(dressedMuons, "DressedMuons");
-
       VetoedFinalState jet_input(fs);
+      /*
+      jet_input.addVetoOnThisFinalState(dressedElectrons.photons());
+      jet_input.addVetoOnThisFinalState(dressedElectrons.bareLepton());
+      jet_input.addVetoOnThisFinalState(dressedMuons.photons());
+      jet_input.addVetoOnThisFinalState(dressedMuons.bareLepton());
+      */
       jet_input.addVetoOnThisFinalState(dressedElectrons);
       jet_input.addVetoOnThisFinalState(dressedMuons);
       //jet_input.addVetoOnThisFinalState(neutrinos);
       //jet_input.vetoNeutrinos();
-      declare(jet_input, "Jet_Input");
+      //declare(jet_input, "Jet_Input");
 
       // projection for jets
       declare(FastJets(jet_input, FastJets::ANTIKT, 0.4), "Jets");
 
       // Projection for Parton Level Top Quarks
-      declare(PartonicTops(PartonicTops::E_MU, e_muCuts), "leptonicTops") ;
-
+      //declare(PartonicTops(PartonicTops::E_MU, e_muCuts), "LeptonicTops") ;
+      //declare(PartonicTops(PartonicTops::ALL, e_muCuts), "AllPartonicTops") ;
+      declare(PartonicTops(PartonicTops::E_MU), "LeptonicTops") ;
+      declare(PartonicTops(PartonicTops::ALL ), "AllPartonicTops") ;
       
-      // Book histograms
+      // Book counters
       _c_fid_t    = bookCounter("fidTotXsectq");
       _c_fid_tbar = bookCounter("fidTotXsectbarq");
-      _h_AbsPtclDiffXsecTPt    = bookHisto1D(1,1,1);
+
+      // book histograms
+      // top quark differential cross sections
+      _h_AbsPtclDiffXsecTPt   = bookHisto1D(1,1,1);
+      _h_AbsPtclDiffXsecTY    = bookHisto1D(1,1,2);
+      _h_NrmPtclDiffXsecTPt   = bookHisto1D(2,1,1);
+      _h_NrmPtclDiffXsecTY    = bookHisto1D(2,1,2);
+
+      // top antiquark differential cross sections
+      _h_AbsPtclDiffXsecTbarPt   = bookHisto1D(1,1,3);
+      _h_AbsPtclDiffXsecTbarY    = bookHisto1D(1,1,4);
+      _h_NrmPtclDiffXsecTbarPt   = bookHisto1D(2,1,3);
+      _h_NrmPtclDiffXsecTbarY    = bookHisto1D(2,1,4);
+
+      _h_AbsPtonDiffXsecTPt = bookHisto1D(3,1,1);
+      
       // _h_diffXsecParticlePt_tbar = bookHisto1D("diffXsecParticlePt_tbar");
       //_h_diffXsecParticleY_t = bookHisto1D("diffXsecParticleY_tq");
       //_h_diffXsecParticleY_tbar = bookHisto1D("diffXsecParticleY_tbarq");
@@ -153,96 +179,172 @@ namespace Rivet {
 
     /// Perform the per-event analysis
     void analyze(const Event& event) {
-
+      //BEGIN;
       // Find leptons, bosons and jets
       const Particles& electrons = apply<DressedLeptons>(event, "DressedElectrons").particlesByPt();
       const Particles& muons =     apply<DressedLeptons>(event, "DressedMuons").particlesByPt();
+      
+      
       Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
       const WFinder& w_el = apply<WFinder>(event, "W_Electron");
       const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
       const Particles w_elP= w_el.bosons();
       const Particles w_muP= w_mu.bosons();
-      const Particles leptonicTops = apply<ParticleFinder>(event, "leptonicTops").particlesByPt();      
+      const Particles leptonicTops = apply<ParticleFinder>(event, "LeptonicTops").particlesByPt();
+      const Particles allPartonicTops = apply<ParticleFinder>(event, "AllPartonicTops").particlesByPt();
 
       /// Particle-level analysis
-      // find particle-level jets
+      bool particleVeto = false;
+      
+      // find jets
       Cut jetCuts = Cuts::abseta < 4.5 && Cuts::pT > 30*GeV ;
+      cout << "sizeOfJets1=" << jets.size()<< " "; RET;
       ifilter_select(jets, jetCuts);
+      cout << "sizeOfJets2=" << jets.size()<< " "; RET;
+
+      // Find the leptons
+      cout << "muons.size()=" << muons.size(); RET;
+      cout << "electrons.size()=" << electrons.size(); RET;
+      Particles leptons;
+      for (const Particle& e : electrons){
+	leptons.push_back(e);
+      } 
+      for (const Particle& m : muons){
+	leptons.push_back(m);
+      }
+      cout << "leptons.size()=" << leptons.size(); RET;
+
+      // isolate jets and leptons
+      bool tooClose= false;;
+      
+      if (!leptons.empty() && !jets.empty()){
+	for (const Jet& j : jets){
+	  
+	  for (const Particle& l : leptons){
+	    
+	    if (deltaR(j, l) < 0.4) tooClose = true ;
+	  }
+	  if (tooClose) particleVeto = true;
+	  tooClose = false;      
+	}
+      }
+      
       
       // find and count b-jets
       Jet bJet;
-      int b=0; // b-jet counter
+      int b=0;
       
       for (const Jet& j : jets){
 	
-	if ( j.bTagged() ) {
+	if ( j.bTagged(Cuts::pT > 5*GeV) && j.abseta() < 2.5) {
 	  b++ ;
 	  bJet = j;
 	}
       }
-      
-      if ( b==1 && electrons.size()+muons.size()==1 && jets.size()==2 ){
-	N3;	
-	// Then this implies there must be 2 jets of which only one is b-tagged and
-	// there is exactly one particle level electron or muon in the event.
-
-	// Find the lepton
-	Particle lepton;
-	if (electrons.size() == 1) lepton = electrons[0];
-	else lepton = muons[0];
-
-	// make particle-level cut on the mass of lepton + b-jet system
-
-	FourMomentum lep4p = lepton;
-	FourMomentum bj4p = bJet;
-	FourMomentum lb4p = lep4p + bj4p;
-
-	if ( lb4p.mass() < 160*GeV ){ // construct pseudo-top from implicit w-boson
-	  N4;
-	  FourMomentum w4p;
 
 
-	  // cout << "W-el=" << w_elP.size() << ", " ;
-	  // cout << "W-mu=" << w_muP.size() << " " ;
-	  //cout << w_el.constituentLepton().pid() << " ";
-	  //	  cout << w_mu.constituentLepton().pid() ;
-	  //if ( w_elP.size() != w_muP.size() ) WORRY;
+      if(leptons.size() != 1) {N2;RET; vetoEvent;}
+      else if(b!=1) {N3;RET;vetoEvent;}
+      else if(jets.size() != 2) {N4;RET;vetoEvent;}
+      else if(particleVeto) {N5;RET;vetoEvent;} // lepton too close to a jet
+    
 
-	  if ( w_elP.size() + w_muP.size() == 1){
-	    N5;
-	    if   ( w_elP.size() == 1 ) w4p = w_elP[0] ;
-	    else if ( w_muP.size() == 1 ) w4p = w_muP[0] ;
-	    else {N1; RET; vetoEvent;}
-	  // this is a problem!
-	  // ^^required veto so code doesn't crash when doing:
-	  // const FourMomentum pseudoTopp4 = bJt4p + wp4;
+      if ( b==1 && leptons.size() == 1 && jets.size() == 2 && !particleVeto ){
 	
-	  const FourMomentum pseudoTop4p = bj4p + w4p;
+	// Then this implies there must be 2 jets of which only one is
+	// b-tagged and there is exactly one isolate particle level
+	// electron or muon in the event.
+      	
+	// make cut on the mass of lepton + b-jet system    
+	FourMomentum lepton4p = leptons[0];
+	FourMomentum bJet4p = bJet;
+	FourMomentum lb4p = lepton4p + bJet4p;
+	
+	if ( lb4p.mass() < 160*GeV ) particleVeto = true;
+	if(particleVeto) {N6;RET;vetoEvent;}
+	FourMomentum w4p;
+	
+	
+	// cout << "W-el=" << w_elP.size() << ", " ;
+	// cout << "W-mu=" << w_muP.size() << " " ;
+	//cout << w_el.constituentLepton().pid() << " ";
+	//	  cout << w_mu.constituentLepton().pid() ;
+	//if ( w_elP.size() != w_muP.size() ) WORRY;
+	
+	  if ( w_elP.size() + w_muP.size() == 1){
 
-	  if (lepton.charge() > 0){ // fill top-quark histos
-	    N8;
-	    _c_fid_t->fill(event.weight()) ;
-	    _h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(), event.weight()) ;
-	    //_h_diffXsecParticleY_t->fill( pseudoTop4p.absrap(), event.weight()) ;
-	    
-	  } else { // Fill anti top-quark histos
-	    N9;
-	    _c_fid_tbar->fill(event.weight()) ;
-	    //_h_diffXsecParticlePt_tbar->fill( pseudoTop4p.pT(), event.weight()) ;
-	    //_h_diffXsecParticleY_tbar->fill( pseudoTop4p.absrap(), event.weight()) ;
+	    if   ( w_elP.size() == 1 )    w4p = w_elP[0] ;
+	    else if ( w_muP.size() == 1 ) w4p = w_muP[0] ;
+	    else {particleVeto = true;}
+
+	    if (!particleVeto){
+	     
+	      // define pseudoTop
+	      const FourMomentum pseudoTop4p = bJet4p + w4p;
+	      
+	      if (leptons[0].charge() > 0){ // fill top-quark histos
+		N7;
+		_c_fid_t->fill(event.weight()) ;
+		
+		_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+		_h_NrmPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_NrmPtclDiffXsecTPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+		
+	      } else { // Fill anti top-quark histos
+		N8;
+		_c_fid_tbar->fill(event.weight()) ;
+		
+		_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+		_h_NrmPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+		_h_NrmPtclDiffXsecTbarPt->fill(pseudoTop4p.absrap(), event.weight()) ;
+		
+	      }
+	    }
 	  }
+	  else if ( w_elP.size() + w_muP.size() > 1) {N1;}
+      } //< end of particle-level analysis 
+            cout << "particleVeto=" << particleVeto;RET;
+
+	
+      /// Parton-level analysis
+      bool partonVeto = false;
+      
+      // find partonic tops
+      
+      if ( !allPartonicTops.empty() ){
+	cout << "-Number of Tops:" << allPartonicTops.size(); RET;
+	if ( allPartonicTops.size() != 1 ) {
+	  partonVeto = true ;
+	} else {
+
+	  
+	  if (allPartonicTops[0].pid() > 0){ // fill top-quark histos
+	    //N7;
+	    cout << "q-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();RET;
+
+	    //	    _h_AbsPtonDiffXsecTPt->fill(leptonicTops[0].pT(), event.weight());
+	  }
+	  if (allPartonicTops[0].pid() < 0){ // fill top-antiquark histos
+	    //N8;
+	    cout << "qbar-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();
+	   
 	  }
 	}
-	RET;
       }
-
-      /// Parton-level analysis
-      //      if ( leptonicTops.size() != 1 ){ N2; RET; vetoEvent;}
-
-
-
-
-
+      
+    
+	
+	
+      
+      RET;
+    }//< end of analyze()
+    
+    
 
 
       
@@ -352,19 +454,31 @@ namespace Rivet {
 	} else { N2; RET; vetoEvent; }
 
       }
+      }
 */
       
-    }
-
+    
+  
 
     /// Normalise histograms etc., after the run
     void finalize() {
-      double SF = crossSection()*picobarn/sumOfWeights();  // scale factor
+
+      double SF = crossSection()/femtobarn/sumOfWeights();  // scale factor
+
       scale(_c_fid_t, SF);
       scale(_c_fid_tbar, SF);
-      scale(_h_diffXsecParticlePt_t, SF);
-      scale(_h_diffXsecParticlePt_tbar, SF);
-     
+
+      scale(_h_AbsPtclDiffXsecTPt, SF);
+      scale(_h_AbsPtclDiffXsecTY, SF);
+      scale(_h_AbsPtclDiffXsecTbarPt, SF);
+      scale(_h_AbsPtclDiffXsecTbarY, SF);
+      scale(_h_AbsPtonDiffXsecTPt, SF);
+      
+      //      normalize(_h_NrmPtclDiffXsecTPt);
+      //(_h_NrmPtclDiffXsecTY, SF);
+      // scale(_h_NrmPtclDiffXsecTbarPt, SF);
+      //scale(_h_NrmPtclDiffXsecTbarY, SF);
+
       /*
       double BR = 0.032; // branching ratio
       double SF = crossSection()*picobarn/sumOfWeights()/BR;  // scale factor
@@ -383,7 +497,7 @@ namespace Rivet {
 
       _hepmcout->clear(); _hepmcout.reset();
       */
-    }
+      }
 
     //@}
 
@@ -391,7 +505,13 @@ namespace Rivet {
     /// @name Histograms
     //@{
     CounterPtr _c_fid_t, _c_fid_tbar;
-    Histo1DPtr _h_diffXsecParticlePt_t, _h_diffXsecParticlePt_tbar, _h_diffXsecParticleY_t,_h_diffXsecParticleY_tbar, _h_AbsPtclDiffXsecTPt;
+    Histo1DPtr _h_AbsPtclDiffXsecTPt, _h_AbsPtclDiffXsecTY,
+      _h_NrmPtclDiffXsecTPt, _h_NrmPtclDiffXsecTY,
+      _h_AbsPtclDiffXsecTbarPt, _h_AbsPtclDiffXsecTbarY,
+      _h_NrmPtclDiffXsecTbarPt,  _h_NrmPtclDiffXsecTbarY,
+      _h_AbsPtonDiffXsecTPt;
+
+
     //@}
 
     std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;

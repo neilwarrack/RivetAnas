@@ -54,3 +54,4 @@ runPythia.sh
 *.exe
 *.out
 *.app
+codecounter
