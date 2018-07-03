@@ -1,0 +1,39 @@
+Name: ATLAS_2017_I1644099
+Year: 2017
+Summary: <Insert short ATLAS_2017_I1644099 description>
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1644099
+Status: UNVALIDATED
+Authors:
+ - Neil Warrack neil.warrack@cern.ch
+#References:
+#- '<Example: Eur.Phys.J. C76 (2016) no.7, 392>'
+#- '<Example: DOI:10.1140/epjc/s10052-016-4184-8>'
+#- '<Example: arXiv:1605.03814>'
+RunInfo: <Describe event types, cuts, and other general generator config tips.>
+NeedCrossSection: no
+#Beams: [p+, p+]
+#Energies: 8000
+Description:
+  '<A fairly long description, including what is measured
+  and if possible what it is useful for in terms of MC validation
+  and tuning. Use LaTeX for maths like $\pT > 50\;\GeV$.>'
+BibKey: Aaboud:2017cgs
+BibTeX: '@article{Aaboud:2017cgs,
+      author         = "Aaboud, Morad and others",
+      title          = "{Measurement of the inclusive and fiducial $t\bar{t}$
+                        production cross-sections in the lepton+jets channel in
+                        $pp$ collisions at $\sqrt{s} = 8$ TeV with the ATLAS
+                        detector}",
+      collaboration  = "ATLAS",
+      year           = "2017",
+      eprint         = "1712.06857",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-EP-2017-276",
+      SLACcitation   = "%%CITATION = ARXIV:1712.06857;%%"
+}'
+ToDo:
+ - Implement the analysis, test it, remove this ToDo, and mark as VALIDATED :-)
+
