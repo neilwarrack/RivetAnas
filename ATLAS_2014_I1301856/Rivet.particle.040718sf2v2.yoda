@@ -1,0 +1,72 @@
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/1BTags
+Path: /ATLAS_2014_I1301856/1BTags
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+4.100000e+01	4.100000e+01	4.100000e+01
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/2BTags-ttbarXSec
+Path: /ATLAS_2014_I1301856/2BTags-ttbarXSec
+ScaledBy: 2.31074396551432537e+00
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.571306e+02	3.630886e+02	6.800000e+01
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/Nemu
+Path: /ATLAS_2014_I1301856/Nemu
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.160000e+02	1.160000e+02	1.160000e+02
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/actual_b-jet_counter
+Path: /ATLAS_2014_I1301856/actual_b-jet_counter
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.592500e+04	1.592500e+04	1.592500e+04
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/assumed_b-jet_counter
+Path: /ATLAS_2014_I1301856/assumed_b-jet_counter
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.000000e+04	1.000000e+04	1.000000e+04
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/ttbar_xsec
+Path: /ATLAS_2014_I1301856/ttbar_xsec
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.090000e+02	1.090000e+02	1.090000e+02
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /_EVTCOUNT
+Path: /_EVTCOUNT
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.000000e+04	1.000000e+04	1.000000e+04
+END YODA_COUNTER_V2
+
+BEGIN YODA_SCATTER1D_V2 /_XSEC
+Path: /_XSEC
+Title: 
+Type: Scatter1D
+---
+# xval	 xerr-	 xerr+
+1.172035e+02	6.033261e-01	6.033261e-01
+END YODA_SCATTER1D_V2

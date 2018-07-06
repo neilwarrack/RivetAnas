@@ -1,0 +1,27 @@
+BEGIN YODA_COUNTER_V2 /_EVTCOUNT
+Path: /_EVTCOUNT
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.000000e+02	1.000000e+02	1.000000e+02
+END YODA_COUNTER_V2
+
+BEGIN YODA_SCATTER1D_V2 /_XSEC
+Path: /_XSEC
+Title: 
+Type: Scatter1D
+---
+# xval	 xerr-	 xerr+
+1.595728e+02	7.894279e+00	7.894279e+00
+END YODA_SCATTER1D_V2
+
+BEGIN YODA_COUNTER_V2 /tempTopAnalysis_I1604029/fidTotXsecttbargamma
+Path: /tempTopAnalysis_I1604029/fidTotXsecttbargamma
+ScaledBy: 1.59572777042277562e+03
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+0.000000e+00	0.000000e+00	0.000000e+00
+END YODA_COUNTER_V2

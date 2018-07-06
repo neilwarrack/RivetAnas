@@ -6,7 +6,7 @@
 *#
 
 # Analysis specific stuff
-*.yoda
+.yoda
 *.hepmc
 *.log
 

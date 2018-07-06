@@ -1,0 +1,27 @@
+BEGIN YODA_COUNTER_V2 /ATLAS_2014_I1301856/ttbarXSec
+Path: /ATLAS_2014_I1301856/ttbarXSec
+ScaledBy: 1.29783267215576509e-01
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+1.219963e+02	1.583307e+01	9.400000e+02
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /_EVTCOUNT
+Path: /_EVTCOUNT
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+3.000000e+03	3.000000e+03	3.000000e+03
+END YODA_COUNTER_V2
+
+BEGIN YODA_SCATTER1D_V2 /_XSEC
+Path: /_XSEC
+Title: 
+Type: Scatter1D
+---
+# xval	 xerr-	 xerr+
+1.245919e+01	1.178070e-01	1.178070e-01
+END YODA_SCATTER1D_V2
