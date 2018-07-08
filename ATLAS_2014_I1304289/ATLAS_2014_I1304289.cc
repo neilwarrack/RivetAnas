@@ -48,7 +48,7 @@ namespace Rivet {
       // top quark observables
       const FourMomentum t1P4 = leptonicpartontops[0] ;
       const FourMomentum t2P4 = hadronicpartontops[0] ;
-      const FourMomentum ttbarP4 = t1P4 + t2P4 ;
+      const FourMomentum ttbarP4 = add(t1P4, t2P4) ;
 
       // fill histograms with event weight
       const double weight = event.weight() ;
