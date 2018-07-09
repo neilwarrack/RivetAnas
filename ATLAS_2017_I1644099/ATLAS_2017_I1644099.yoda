@@ -1,0 +1,13 @@
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2014_I1644099/inclusive
+Path=/REF/ATLAS_2014_I1644099/Inclusive
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+8.0   0.5     0.5                     248.3    13.4    13.4
+# END YODA_SCATTER2D
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2014_I1644099/fiducial
+Path=/REF/ATLAS_2014_I1644099/Fiducial
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+8.0   0.5     0.5                     48.0    2.0    2.0
+# END YODA_SCATTER2D
