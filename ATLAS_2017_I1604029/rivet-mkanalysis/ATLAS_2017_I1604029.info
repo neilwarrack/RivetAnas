@@ -1,0 +1,42 @@
+Name: ATLAS_2017_I1604029
+Year: 2017
+Summary: <Insert short ATLAS_2017_I1604029 description>
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1604029
+Status: UNVALIDATED
+Authors:
+ - Your Name <your@email.address>
+#References:
+#- '<Example: Eur.Phys.J. C76 (2016) no.7, 392>'
+#- '<Example: DOI:10.1140/epjc/s10052-016-4184-8>'
+#- '<Example: arXiv:1605.03814>'
+RunInfo: <Describe event types, cuts, and other general generator config tips.>
+NeedCrossSection: no
+#Beams: <Insert beam pair(s), e.g. [p+, p+] or [[p-, e-], [p-, e+]]>
+#Energies: <Run energies or beam energy pairs in GeV, e.g. [13000] or [[8.0, 3.5]] or [630, 1800]. Order pairs to match "Beams">
+Description:
+  '<A fairly long description, including what is measured
+  and if possible what it is useful for in terms of MC validation
+  and tuning. Use LaTeX for maths like $\pT > 50\;\GeV$.>'
+BibKey: Aaboud:2017era
+BibTeX: '@article{Aaboud:2017era,
+      author         = "Aaboud, Morad and others",
+      title          = "{Measurement of the $ t\overline{t}\gamma $ production
+                        cross section in proton-proton collisions at $ \sqrt{s}=8
+                        $ TeV with the ATLAS detector}",
+      collaboration  = "ATLAS",
+      journal        = "JHEP",
+      volume         = "11",
+      year           = "2017",
+      pages          = "086",
+      doi            = "10.1007/JHEP11(2017)086",
+      eprint         = "1706.03046",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-EP-2017-086",
+      SLACcitation   = "%%CITATION = ARXIV:1706.03046;%%"
+}'
+ToDo:
+ - Implement the analysis, test it, remove this ToDo, and mark as VALIDATED :-)
+

@@ -54,7 +54,7 @@ namespace Rivet {
         const FourMomentum t1P4 = leptonicpartontops[0];
         const FourMomentum t2P4 = isSemilepton ? hadronicpartontops[0] : leptonicpartontops[1];
         const double t1Pt = t1P4.pT(), t2Pt = t2P4.pT();
-        const FourMomentum ttbarP4 = t1P4 + t2P4;
+        const FourMomentum ttbarP4 = add(t1P4, t2P4);
         const FourMomentum t1P4AtCM = LorentzTransform::mkFrameTransformFromBeta(ttbarP4.betaVec()).transform(t1P4);
         const double dPhi = deltaPhi(t1P4.phi(), t2P4.phi());
 

@@ -627,7 +627,7 @@ namespace Rivet {
     /// Normalise histograms etc., after the run
     void finalize() {
 
-      double SF = crossSection()/picobarn/sumOfWeights();  // scale factor
+      double SF = crossSection()/femtobarn/sumOfWeights();  // scale factor
 
       scale({_h_PhotonAbsEta, _h_PhotonPt}, SF);
       scale(_c_fidXsec, SF);

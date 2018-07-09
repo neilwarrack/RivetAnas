@@ -105,8 +105,8 @@ namespace Rivet {
 			 e_muCuts, 
 			 PID::ELECTRON, 
 			 35*GeV, 8000*GeV, // Mass Window??? Max??? NB: W transverse mass > 35GeV is stated in paper which defines pseudo-top (https://arxiv.org/pdf/1502.05923.pdf)
-			 30*GeV, //E_T_miss 
-			 0.1, // delta R of clustering to QED dress electrons
+			 30*GeV, //E_T_miss minimum (aslo see: https://arxiv.org/pdf/1502.05923.pdf)
+			 0.1, // delta R of clustering to QED dressed lepton
 			 WFinder::PROMPTCHLEPTONS, // can remove if not changed
 			 WFinder::CLUSTERNODECAY, // this will not include non prompt photons, sould I include them? if so use: CLUSTERALL. Can remove if not changed
 			 WFinder::TRACK, //can remove if not changed
