@@ -1,12 +1,13 @@
+# ROUGH GUESSES FROM PLOT IN PAPER!!!! DON'T TAKE SERIOUSLY!!!
 # BEGIN YODA_SCATTER2D /REF/tempTopAnalysis_I1604029/d01-x01-y01
 Path=/REF/tempTopAnalysis_I1604029/d01-x01-y01
 Type=Scatter2D
 # xval   xerr-   xerr+   yval   yerr-   yerr+
-20.0    5.0    5.0                    0.0   0.0     0.0
-30.0    5.0     10.0                    0.0   0.0     0.0
-50.0    10.0    10.0                    0.0   0.0     0.0
-80.0    20.0    20.0                    0.0   0.0     0.0
-200.0   100.0    100.0                    0.0   0.0     0.0
+20.0    5.0    5.0                    4.5   0.0     0.0
+30.0    5.0     10.0                    2.6   0.0     0.0
+50.0    10.0    10.0                    1.2   0.0     0.0
+80.0    20.0    20.0                    0.4   0.0     0.0
+200.0   100.0    100.0                    0.1   0.0     0.0
 # END YODA_SCATTER2D 
 
 
@@ -14,9 +15,9 @@ Type=Scatter2D
 Path=/REF/tempTopAnalysis_I1604029/d01-x01-y02
 Type=Scatter2D
 # xval   xerr-   xerr+   yval   yerr-   yerr+
-0.1    0.1    0.15	 		0.0	0.0	0.0
-0.3    0.05    0.25	 		0.0	0.0	0.0
-0.6    0.05    0.3	 		0.0	0.0	0.0
-1.0    0.1    0.37	 		0.0	0.0	0.0
-1.87    0.5    0.5	 		0.0	0.0	0.0
+0.1    0.1    0.15	 		110.0	0.0	0.0
+0.3    0.05    0.25	 		100.0	0.0	0.0
+0.6    0.05    0.3	 		85.0	0.0	0.0
+1.0    0.1    0.37	 		70.0	0.0	0.0
+1.87    0.5    0.5	 		35.0	0.0	0.0
 # END YODA_SCATTER2D 
