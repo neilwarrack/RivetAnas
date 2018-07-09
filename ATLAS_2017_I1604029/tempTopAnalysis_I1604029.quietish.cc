@@ -77,8 +77,7 @@ namespace Rivet {
       declare(dressedLeptons, "DressedLeptons");
 
       /// Leptons (Testing)
-      PromptFinalState promptParticles_all(true, true); //accept muon and tau decays
-      IdentifiedFinalState allLeptons_fs(promptParticles_all, {PID::ELECTRON, PID::MUON, -PID::ELECTRON, -PID::MUON});//< for testing cuts
+      IdentifiedFinalState allLeptons_fs(fs, {PID::ELECTRON, PID::MUON, -PID::ELECTRON, -PID::MUON});//< for testing cuts
       //IdentifiedFinalState allLeptons_fs(e_muForDressingCuts);//< for testing cuts
       //allLeptons_fs.acceptIdPair(PID::MUON);//< for testing cuts
       //allLeptons_fs.acceptIdPair(PID::ELECTRON);//< for testing cuts
@@ -125,8 +124,9 @@ namespace Rivet {
       //_c_fid_tbar = bookCounter("fidTotXsectbarq");
 
       // book histograms
-      _h_PhotonPt = bookHisto1D(1,1,1);
-      _h_PhotonAbsEta = bookHisto1D(1,1,2);
+ 
+      //_h_PhotonPt = bookHisto1D(1,1,1);
+      //_h_PhotonAbsEta = bookHisto1D(1,1,2);
 
             
       // debug hepmc print-out
@@ -137,19 +137,19 @@ namespace Rivet {
 
     /// Perform the per-event analysis
     void analyze(const Event& event) {
-      BEGIN;
+      //BEGIN;
           
       
       // Find leptons, jets and high energy photons
       const Particles& leptons = apply<DressedLeptons>(event, "DressedLeptons").particlesByPt();
-      const Particles& hePhotons = apply<IdentifiedFinalState>(event, "HighEnergyPhotons").particlesByPt();
-      const Particles& photons = apply<IdentifiedFinalState>(event, "AllPhotons").particlesByPt();
-      Jets jets = apply<FastJets>(event, "Jets").jetsByPt(); //<keep non const for filtering
-      
-      // for testing:
       const Particles& leptonsNoCuts = apply<DressedLeptons>(event, "DressedLeptonsNoCuts").particlesByPt();
+      const Particles& hePhotons = apply<IdentifiedFinalState>(event, "HighEnergyPhotons").particlesByPt();
       const Particles& hePhotonsNoCuts = apply<IdentifiedFinalState>(event, "highEnergyPhotonsNoCuts").particlesByPt();
+      const Particles& photons = apply<IdentifiedFinalState>(event, "AllPhotons").particlesByPt();
+
+
       
+      Jets jets = apply<FastJets>(event, "Jets").jetsByPt();
 
       
       /// overlap object removal
@@ -167,14 +167,15 @@ namespace Rivet {
 	
       // jet selection
       Cut jetCuts = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV ;
-      cout << "Jets=" << jets.size(); RET;
+      //cout << "Jets=" << jets.size()<< " "; RET;
       ifilter_select(jets, jetCuts);
-      cout << "JetsInFiducialPhaseSpace=" << jets.size(); RET;
+      //cout << "JetsInFiducialPhaseSpace=" << jets.size()<< " "; RET;
       
       // emediate (but non-essential) veto if not enough jets
       
       if ( jets.size() < 4) {
-	cout << "not enough jets to proceed. veto!";RET;
+	//cout << "veto event: not enough jets to proceed";RET;
+	//cout << "VETOCODES:";RET;
 	N3; RET; //NB: N3 is used twice! (see event selection section ~L460)
 	vetoEvent;
       }
@@ -182,31 +183,14 @@ namespace Rivet {
       
      
       // testing lepton cuts:****************************************
-      
+      /*
       cout << "START: Lepton Testing>>>>>>>>>>>>>>>>>>>>>>>>>>";RET;
       Particles electronsNoCuts;
       Particles muonsNoCuts;
       Particles freshCutLeptons;
       Particles selectedCutLeptons;
       if (leptonsNoCuts.empty() ) {
-	cout << " no dressed (noCut)leptons";RET;
-      //////////////////// HEPMC OUT (START) ////////////////////////////////
-	/*
-      //if ( selectedElectrons.size() + selectedMuons.size() != 1 )
-      //{                   //
-	//cout << "   !!!" << endl;                                          //
-	//	_c_error_e->fill(event.weight()); //error counter                  //
-	                                                                   //
-	// print event record to file                                      //
-	const HepMC::GenEvent* ge = event.genEvent();                      //
-	if (ge == nullptr) {cout << "nullpointer found: GenEvent*"<<endl;  //
-	} else { //if (ge != nullptr)                                      //
-	  ge->print(); // sends (formatted) HepMC event to screen          //
-	  _hepmcout->write_event(ge); // writes to file                    //
-	}                                                                  //
-	//}
-	*/                                                                    //
-      //////////////////// HEPMC OUT (END) //////////////////////////////////
+	cout << " no dressed (noCut)leptons"; RET; vetoEvent; 
       } else { //if there ARE leptons with no cuts
 	cout << " searching through DressedLeptonsNoCuts...";RET;
 	for (const Particle& l : leptonsNoCuts){
@@ -261,37 +245,34 @@ namespace Rivet {
 	  else {cout<< " lepton wierdness(2)!"; RET; N1; RET;}
 	}
       }
-      cout << "END: Lepton Testing<<<<<<<<<<<<<<<<<<<<<<<<<<<<";RET;     
+      cout << "END: Lepton Testing<<<<<<<<<<<<<<<<<<<<<<<<<<<<";RET;
+      */     
       // end of lepton cuts test*************************************
      
       
       // find muons that are seperated form jets.
       // From paper: "Muons within a cone of ∆R = 0.4 around a jet are removed"
-      cout << "leptons.size()=" << leptons.size(); RET;
-      if (leptons.empty()) {
-	cout << "No leptons in event! Veto!" ; RET;
-	N2; RET;
-	vetoEvent;
-      }
-	  cout << "searching through DressedLeptons...";RET;
-	for (const Particle& l : leptons){
-	  if (l.abspid() == PID::MUON){
-	    cout << "found:muon";RET;
-	    for (const Jet& j : jets){
-	      if (deltaR(j, l) < 0.4) tooClose = true;
+      //cout << "leptons.size()=" << leptons.size(); RET;
+      if (leptons.empty()) {N2; RET; vetoEvent;}
+      //cout << "searching through DressedLeptons...";RET;
+      for (const Particle& l : leptons){
+	if (l.abspid() == PID::MUON){
+	  //cout << "found:muon";RET;
+	  for (const Jet& j : jets){
+	    if (deltaR(j, l) < 0.4) tooClose = true;
 	  }
 	  
 	  if (!tooClose) {
-	    cout << "muon->SELECT!";RET;
+	    //cout << "muon->SELECT!";RET;
 	    selectedMuons.push_back(l);
 	  } else {
 	    tooClose = false; //< reset flag
-	    cout << "muon->reject!";RET;
+	    //cout << "muon->reject!";RET;
 	  }
 	}
 	
 	else if (l.abspid() == PID::ELECTRON) {
-	  cout << "found:electron";RET;
+	  //cout << "found:electron";RET;
 	  electrons.push_back(l);
 	}
       }
@@ -302,28 +283,29 @@ namespace Rivet {
       // From paper: "closest jet within a cone of ∆R = 0.2 around an electron [is removed]."      
       double el_dR_min = 0.2 ;
       if (!electrons.empty()){
-	cout << "attempt to remove jet closest to electron(s) if closer than deltaR = 0.2...";RET; 
+	//cout << "electrons in event!";RET;
+	//cout << "attempt to remove jet closest to electron(s) if closer than deltaR = 0.2...";RET; 
 	for (const Particle& e : electrons){
-	  cout << "considering electron...";RET;
-	  cout << "considering " << jets.size() << " jets";RET;
+	  //cout << "considering electron...";RET;
+	  //cout << "considering " << jets.size() << " jets";RET;
 	  for (const Jet& j : jets){ // find minimum dR(e,j)
 	    if (deltaR(j,e) < el_dR_min) {el_dR_min = deltaR(j, e);}
 	  }
-	  cout << "el_dR_min=" << el_dR_min;RET;
-	  cout<< "NB: if the above number is 0.2 then it probably means that no jet was found within 0.2 of an electron";RET;
+	  //cout << "el_dR_min=" << el_dR_min;RET;
+	  //cout<< "NB: if the above number is 0.2 then it probably means that no jet was found within 0.2 of an electron";RET:
 	  // remove minimal dR jet if el_dR_min < 0.2
 	  for (const Jet& j : jets){
 	  
 	    if ( el_dR_min < 0.2 && deltaR(j, e) > el_dR_min) {
-	      cout << "jet->keep"; RET;
+	      //cout << "jet->keep"; RET;
 	      selectedJetsEl.push_back(j);
 	    }
 	    else if ( el_dR_min < 0.2 && deltaR(j, e) == el_dR_min ){
-	    cout << "jet->reject";RET;
+	    //cout << "jet->reject";RET;
 	      rejectN++;// counter for testing/sanity/debugging
 	    }
 	    else if ( el_dR_min == 0.2 ) {
-	      cout << "jet->keep"; RET;
+	      //cout << "jet->keep"; RET;
 	      selectedJetsEl.push_back(j);
 	    }
 	  }
@@ -339,90 +321,35 @@ namespace Rivet {
 	}
       }
       
-      // Test photons: START****************************************************************
-      cout << "START: Photon Testing>>>>>>>>>>>>>>>>>>>>>>>>>>";RET;
-      Particles freshCutPhotons, freshCutPhotonsNoHad;
-      int hadronicPhotonsCtr=0;
-      if (hePhotonsNoCuts.empty() ) {
-	cout << " no prompt photons"; RET; 
-      } else { //if there ARE photons with no cuts
-	cout << " searching through hePhotonsNoCuts (prompt photons with no cuts)...";RET;
-	for (const Particle& p : hePhotonsNoCuts){
-	  if (p.abspid() == PID::PHOTON){
-	    cout << " found:photon";
-	    if (p.abseta() > 2.37) {cout << "...failed eta cut";
-	      if (p.Et() < 15*GeV ) {cout << " and Et cut";}
-	      RET;
-	    }
-	    else if (p.Et() < 15*GeV ) {cout << "...failed Et cut";RET;} 
-	    else {freshCutPhotons.push_back(p); cout << "...passed cuts!"; RET;}
-	  }
-	  else {cout<< " photon wierdness!"; RET; N1; RET;}
-	  cout << " photon.Et=" << p.Et();RET;
-	}
-      }
-
-      if (photons.empty() ) {
-	cout << " no photons at all!"; RET; 
-      } else { //if there ARE photons with no cuts
-	cout << " searching through photons (ie ALL final state photons)...";RET;
-	for (const Particle& p : photons){
-	  if (p.abspid() == PID::PHOTON){
-
-	    if (p.fromHadron()) {hadronicPhotonsCtr++;continue;}
-	    else {cout << " found:nonHadronicPhoton";
-	      if (p.abseta() > 2.37) {cout << "...failed eta cut";
-		if (p.Et() < 15*GeV ) {cout << " and pt cut";}
-		RET;
-	      }
-	      else if (p.Et() < 15*GeV ) {cout << "...failed pt cut";RET;} 
-	      else {freshCutPhotonsNoHad.push_back(p); cout << "...passed cuts!"; RET;}
-	    }
-	  }
-	  else {cout<< " photon wierdness!"; RET; N1; RET;}
-	}
-      }
-
-      //RET;
-      cout << " (photons from hadronic decays) hadronicPhotonsCtr=" << hadronicPhotonsCtr;     RET;
-      cout << " ('non-hadronic' photons passing eta and Et cuts) freshCutPhotonsNoHad.size()=" << freshCutPhotonsNoHad.size();    RET;
-      cout << " (prompt photons) hePhotonsNoCuts.size()=" << hePhotonsNoCuts.size(); RET;
-      cout << " (prompt photons with cuts) freshCutPhotons.size()=" << freshCutPhotons.size(); RET;
-      cout << "END: Photons Testing<<<<<<<<<<<<<<<<<<<<<<<<";RET;
-      // Test photons: END***********************************************************************************
 
       
       // remove jet closest to photon if closer than deltaR = 0.1
       // from paper: "closest jet within a cone of ∆R = 0.1 around a photon [is removed]"
-      cout << "attempt to remove jet closest to photon if dR_min < 0.1..."; RET;
-      if (hePhotons.empty()) {
-	cout << "no high energy photons in event! Veto!"; RET;
-	N5; RET;
-	vetoEvent;
-      }
-      cout << "high energy photons found in event";RET;
+      //cout << "attempt to remove jet closest to photon if dR_min < 0.1..."; RET;
+      if (hePhotons.empty()) {N5; RET; vetoEvent;}
+      //cout << "high energy photons found in event"
       double ph_dR_min = 0.1 ;
       for (const Particle& ph : hePhotons){
-	cout<< "considering photon...";RET;
-	cout << "considering " << jets.size() << " jets";RET;
+	//cout<< "considering photon...";RET;
+	//cout << "considering " << jets.size() << " jets";RET;
 	for (const Jet& j : jets){ // find minimum dR
 	  if (deltaR(j, ph) < ph_dR_min) {ph_dR_min = deltaR(j, ph);}
 	}
-	cout << "ph_dR_min=" << ph_dR_min;RET;
-	cout << "NB: if the above number is 0.1 then it probably means no jet was found within 0.1 of a photon";RET;
+	//cout << "ph_dR_min=" << ph_dR_min;RET;
+	//cout << "NB: if the above number is 0.1 then it probably means no jet was found within 0.1 of a photon";RET;
 	  //remove minimal dR jet if ph_dR_min < 0.1
 	  for (const Jet& j : jets){
 	      
 	    if (ph_dR_min < 0.1 && deltaR(j, ph) > el_dR_min) {
-	      cout<<"jet->keep"; RET;
+	      //cout<<"jet->keep"; RET;
 	      selectedJets.push_back(j);
 	    }
 	    else if ( ph_dR_min < 0.1 && deltaR(j, ph) == ph_dR_min ) {
-	      cout << "jet->reject"; RET;
+	      //cout << "jet->reject"; RET;
 	      rejectN++;
 	    }
 	    else if ( ph_dR_min == 0.1 ) {
-	      cout << "jet->keep"; RET;
+	      //cout << "jet->keep"; RET;
 	      selectedJets.push_back(j);
 	    }
 	  }
@@ -441,26 +368,26 @@ namespace Rivet {
 
       // For print out only - remove in final anaysis -
       // NB: must change selectedJets->jets in all the following code:	
-      cout << "select kept jets...";RET;
+      //cout << "select kept jets...";RET;
       for (const Jet& j : jets){
 	selectedJets.push_back(j);
-	cout << "jet->SELECT!";RET;
+	//cout << "jet->SELECT!";RET;
       }
 
       
       // remove electrons that are within delta R = 0.4 of a jet
       if (!electrons.empty()){
-	cout << "attempting to removie any electrons that are within deltaR = 0.4 of a jet"; RET;
-	cout << "considering " << electrons.size() << " electrons";RET;
+	//cout << "attempting to removie any electrons that are within deltaR = 0.4 of a jet"; RET;
+	//cout << "considering " << electrons.size() << " electrons";RET;
 	for (const Particle& e : electrons){
 	  for (const Jet& j : selectedJets){
 	    if ( deltaR(e, j) < 0.4 ) tooClose = true;
 	  }
 	  if (!tooClose) {
-	    cout<<"electron->SELECT!"; RET;
+	    //cout<<"electron->SELECT!"; RET;
 	    selectedElectrons.push_back(e);
 	  } else {
-	    cout<<"electron->reject"; RET;
+	    //cout<<"electron->reject"; RET;
 	    tooClose = false; //< reset flag
 	  }
 	}
@@ -468,15 +395,17 @@ namespace Rivet {
 
       
       // find and count b-jets
-      cout << "find b-jets...";RET;
+      //cout << "find b-jets...";RET;
       for (const Jet& j : selectedJets){
 	if ( j.bTagged(Cuts::pT>5*GeV) )  bJetN++ ;
       }
-      if (bJetN!=0){cout << "found " << bJetN << " b-jets!"; RET;} else {cout << "no b-jets found"; RET;}
+      //if (bJetN!=0){cout << "found " << bJetN << " b-jets!"; RET;} else {cout << "no b-jets found"; RET;}
 
+
+      // Test photons: START
       /*
-      // Test photons: START****************************************************************
       cout << "START: Photon Testing>>>>>>>>>>>>>>>>>>>>>>>>>>";RET;
+
       Particles freshCutPhotons, freshCutPhotonsNoHad;
       int hadronicPhotonsCtr=0;
       if (hePhotonsNoCuts.empty() ) {
@@ -524,52 +453,59 @@ namespace Rivet {
       cout << " (prompt photons) hePhotonsNoCuts.size()=" << hePhotonsNoCuts.size(); RET;
       cout << " (prompt photons with cuts) freshCutPhotons.size()=" << freshCutPhotons.size(); RET;
       cout << "END: Photons Testing<<<<<<<<<<<<<<<<<<<<<<<<";RET;
-          
-      // Test photons: END***********************************************************************************
-      */
+      */    
+      // Test photons: END
+    
       
       // Print out Selected Object totals
-      
+      /*
       cout << "-Object:muons=" << selectedMuons.size(); RET;
       cout << "-Object:electrons=" << selectedElectrons.size(); RET;
       cout << "-Object:jets=" << selectedJets.size(); RET;
       cout << "-Object:b-jets=" << bJetN; RET;
       cout << "-Object:photons=" << hePhotons.size(); RET; 
+      */
+
+
       
+      //////////////////// HEPMC OUT (START) ////////////////////////////////
+      /*
+      if ( selectedElectrons.size() + selectedMuons.size() != 1 )
+      {                   //
+	cout << "   !!!" << endl;                                          //
+	//	_c_error_e->fill(event.weight()); //error counter                  //
+	                                                                   //
+	// print event record to file                                      //
+	const HepMC::GenEvent* ge = event.genEvent();                      //
+	if (ge == nullptr) {cout << "nullpointer found: GenEvent*"<<endl;  //
+	} else { //if (ge != nullptr)                                      //
+	  ge->print(); // sends (formatted) HepMC event to screen          //
+	  _hepmcout->write_event(ge); // writes to file                    //
+	}                                                                  //
+      }                                                                    //
+      */
+      //////////////////// HEPMC OUT (END) //////////////////////////////////
+
 
 
       
       /// event selection in fiducial phase space based on the above object collections.
       //cout << "VetoCode:"; RET;
       ////////////////////////////////////////////////////////////////////////////////////
-      if ( selectedElectrons.size() + selectedMuons.size() != 1 ) {
-	cout << "no single lepton, veto!";RET;
-	N2; RET; vetoEvent;} // N2 already used if leptons.size()==0
-      if ( selectedJets.size() < 4) {
-	cout << "not enough jets, veto!"; RET;
-	N3; RET; vetoEvent;}
-      if ( bJetN == 0 ) {
-	cout << "no bjets, veto!";RET;
-	N4; RET; vetoEvent;}
-      if ( hePhotons.size() != 1 ) {
-	cout << "no single photon, veto!";RET;
-	N5; RET; vetoEvent;} // N5 already used if hePhotons.size()==0
+      if ( selectedElectrons.size() + selectedMuons.size() != 1 ) {N2; RET; vetoEvent;} // N2 already used if leptons.size()==0
+      if ( selectedJets.size() < 4)                               {N3; RET; vetoEvent;}
+      if ( bJetN == 0 )                                           {N4; RET; vetoEvent;}
+      if ( hePhotons.size() != 1 )                                {N5; RET; vetoEvent;} // N5 already used if hePhotons.size()==0
       if (selectedElectrons.size() == 1){
-	if ( deltaR(selectedElectrons[0], hePhotons[0]) < 0.7) {
-	  cout << "chosen lepton (electron) and photon are too close, veto!"; RET;
-	  N6; RET; vetoEvent;}
+	if ( deltaR(selectedElectrons[0], hePhotons[0]) < 0.7) {N6; RET; vetoEvent;}
       }
       if (selectedMuons.size() ==1 ){
-	if ( deltaR(selectedMuons[0], hePhotons[0])  < 0.7) {
-	  cout << "chosen lepton (muon) and photon are too close, veto!";RET;
-	  N7; RET; vetoEvent;}
+	if ( deltaR(selectedMuons[0], hePhotons[0])  < 0.7) {N7; RET; vetoEvent;}
       }
       for (Jet& j : selectedJets){
-	if (deltaR(j, hePhotons[0]) < 0.5){
-	  cout << "jet and photon are too close, veto!";RET;
-	  N8; RET; vetoEvent;}
+	if (deltaR(j, hePhotons[0]) < 0.5){N8; RET; vetoEvent;}
       }
-      
+
       ////////////////////////////////////////////////////////////////////////////////////
 
       ////////////////////////////// VETOS w/o CODES /////////////////////////////////////
@@ -595,10 +531,12 @@ namespace Rivet {
       
       // fill histos
       N9;RET;
+      //SUCCESS;
       _h_PhotonAbsEta->fill(hePhotons[0].abseta(), event.weight()) ;
       _h_PhotonPt->fill(hePhotons[0].pt(), event.weight()) ;
       _c_fidXsec->fill(event.weight());
-      
+
+
 
       
       // DEBUGGING:
@@ -627,37 +565,40 @@ namespace Rivet {
     /// Normalise histograms etc., after the run
     void finalize() {
 
-      double SF = crossSection()/picobarn/sumOfWeights();  // scale factor
+      double SF = crossSection()/femtobarn/sumOfWeights();  // scale factor
 
       scale({_h_PhotonAbsEta, _h_PhotonPt}, SF);
       scale(_c_fidXsec, SF);
+      cout << "Calculated inclusive Xsec from single lepton channel in fiducial region is " << _c_fidXsec->numEntries()*SF << "fb" << endl;
+	//scale(_c_fid_tbar, SF);
 
-      // user info:_________________________________________________________________________________
-      RET;
-      cout << "VETO CODES:";RET;
-      cout << "#1 test warning!";RET; 
-      cout << "   --> NB: no veto for test warning!! => Total = vetos + N_{#1}";RET;
-      cout << "#2 no single lepton";RET;
-      cout << "#3 not enough jets"; RET;
-      cout << "#4 no bjets";RET;
-      cout << "#5 no single photon";RET;
-      cout << "#6 chosen lepton (electron) and photon are too close"; RET;
-      cout << "#7 chosen lepton (muon) and photon are too close";RET;
-      cout << "#8 jet and photon are too close";RET;
-      RET;
+      //scale(_h_PhotonPt, SF);
+      //scale(_h_PhotonAbsEta, SF);
+ 
       
+      //      normalize(_h_NrmPtclDiffXsecTPt);
+      //(_h_NrmPtclDiffXsecTY, SF);
+      // scale(_h_NrmPtclDiffXsecTbarPt, SF);
+      //scale(_h_NrmPtclDiffXsecTbarY, SF);
 
-      cout << "Calculated inclusive Xsec from single lepton channel in fiducial region is "
-	   << _c_fidXsec->numEntries()*SF << "fb" << endl;
+      /*
+      double BR = 0.032; // branching ratio
+      double SF = crossSection()*picobarn/sumOfWeights()/BR;  // scale factor
+     
+      scale(_c_ttbar, SF);
+      scale(_c_ttbarEMuPairsOppChar_partonic,SF);
 
-      cout << "Generator Xsec is:" << crossSection() << "pb" << endl;
-
-      RET;
-      //_________________________________________________________________________________________
+      double b1 = 0.0, b2 = 0.0, XsecSelection = 0.0, XsecSelection2 = 0.0;
+      b1 = _c_1btag->numEntries();
+      b2 = _c_2btag->numEntries();
+      XsecSelection = (b2 + b1/2.0)*(b2 + b2/2.0)*crossSection()*picobarn/sumOfWeights()/b2;
+      XsecSelection2 = (b2/0.008 + b1/2.0)*(b2/0.008 + b2/2.0)*0.008*0.008*crossSection()*picobarn/sumOfWeights()/b2;
+      //cout << "Calculated Xsec from e mu selection and btagged jets = " << XsecSelection << "pb" << endl;
+      //cout << "Calculated Xsec from e mu selection and btagged jets (including e mu efficiency factor of 0.8%) = " << XsecSelection2 << "pb" << endl;
 
 
       _hepmcout->clear(); _hepmcout.reset();
-      
+      */
       }
 
     //@}
@@ -681,3 +622,4 @@ namespace Rivet {
 
 
 }
+
