@@ -11,6 +11,7 @@
 *.dat
 *.png
 *.pdf
+*.html
 
 # Analysis tools in folder
 TTbarDiLep.cc
