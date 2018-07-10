@@ -1,5 +1,4 @@
 # gitignore
-.gitignore
 
 # auto saves from emacs and the likes
 *~
@@ -9,6 +8,9 @@
 .yoda
 *.hepmc
 *.log
+*.dat
+*.png
+*.pdf
 
 # Analysis tools in folder
 TTbarDiLep.cc
