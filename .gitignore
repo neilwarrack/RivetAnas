@@ -23,7 +23,7 @@ runPythia.sh
 # sub-directories
 **/rivet-plots/
 /ValidationPlots
-/rivet-plots
+/rivet-plots/
 
 # Prerequisites
 *.d
