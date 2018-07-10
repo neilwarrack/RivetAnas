@@ -5,7 +5,7 @@
 *#
 
 # Analysis specific stuff
-.yoda
+#.yoda
 *.hepmc
 *.log
 *.dat
@@ -23,6 +23,7 @@ runPythia.sh
 # sub-directories
 **/rivet-plots/
 /ValidationPlots
+/rivet-plots
 
 # Prerequisites
 *.d
