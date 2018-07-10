@@ -1,0 +1,52 @@
+Name: ATLAS_2017_I1604029
+Year: 2017
+Summary: ttbar + gamma at 8 TeV
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1604029
+Status: VALIDATED
+Authors:
+ - Yichen Li <yichen.li@cern.ch>
+ - Christian Gutschow <chris.g@cern.ch>
+References:
+ - JHEP 1711 (2017) 086
+ - doi:10.1007/JHEP11(2017)
+ - arXiv:1706.03046 [hep-ex]
+Keywords:
+ - TTBAR
+ - PHOTON
+ - NONALLHADRONIC
+RunInfo:
+  non-allhadronic top-quark pair production associated with a photon
+Luminosity_fb: 20.2
+Beams: [p+, p+]
+Energies: [8000]
+PtCuts: [25,15]
+NeedCrossSection: True
+Description: 
+  'The cross section of a top-quark pair produced in association with a photon is measured in proton-proton collisions 
+  at a centre-of-mass energy of $\sqrt{s} = 8$ TeV with 20.2 fb${}^{-1}$ of data collected by the ATLAS detector at the 
+  Large Hadron Collider in 2012. The measurement is performed by selecting events that contain a photon with transverse 
+  momentum $p_\text{T} > 15$ GeV, an isolated lepton with large transverse momentum, large missing transverse momentum, 
+  and at least four jets, where at least one is identified as originating from a $b$-quark. The production cross section 
+  is measured in a fiducial region close to the selection requirements. It is found to be $139 \pm 7$ (stat.) $\pm 17$ (syst.) fb,
+  in good agreement with the theoretical prediction at next-to-leading order of $151 \pm 24$ fb. In addition, differential 
+  cross sections in the fiducial region are measured as a function of the transverse momentum and pseudorapidity of the photon.'
+BibKey: Aaboud:2017era
+BibTeX: '@article{Aaboud:2017era,
+      author         = "Aaboud, Morad and others",
+      title          = "{Measurement of the $ t\overline{t}\gamma $ production
+                        cross section in proton-proton collisions at $ \sqrt{s}=8
+                        $ TeV with the ATLAS detector}",
+      collaboration  = "ATLAS",
+      journal        = "JHEP",
+      volume         = "11",
+      year           = "2017",
+      pages          = "086",
+      doi            = "10.1007/JHEP11(2017)086",
+      eprint         = "1706.03046",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-EP-2017-086",
+      SLACcitation   = "%%CITATION = ARXIV:1706.03046;%%"
+}'

@@ -596,7 +596,7 @@ namespace Rivet {
       // fill histos
       N9;RET;
       _h_PhotonAbsEta->fill(hePhotons[0].abseta(), event.weight()) ;
-      _h_PhotonPt->fill(hePhotons[0].pt(), event.weight()) ;
+      _h_PhotonPt->fill(hePhotons[0].pt()/GeV, event.weight()) ;
       _c_fidXsec->fill(event.weight());
       
 

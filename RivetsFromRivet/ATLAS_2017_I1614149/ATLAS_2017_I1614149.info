@@ -1,0 +1,53 @@
+Name: ATLAS_2017_I1614149
+Year: 2017
+Summary: Resolved and boosted ttbar l+jets cross sections at 13 TeV
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1614149
+Status: VALIDATED
+Authors:
+ - Francesco La Ruffa <francesco.la.ruffa@cern.ch>
+ - Steffen Henkelmann <steffen.henkelmann@cern.ch>
+ - Federica Fabbri <federica.fabbri@cern.ch>
+ - Christian Gutschow <chris.g@cern.ch>
+References:
+ - JHEP 1711 (2017) 191
+ - doi:10.1007/JHEP11(2017)1
+ - arXiv:1708.00727 [hep-ex]
+Keywords:
+ - TTBAR
+ - NONALLHADRONIC
+ - BOOSTED
+RunInfo:
+ non-all-hadronic ttbar production at 13 TeV
+NeedCrossSection: True
+Beams: [p+, p+]
+Energies: [13000]
+PtCuts: [25.]
+Description:
+  'Measurements of differential cross-sections of top-quark pair production in fiducial phase-spaces are presented as a function of
+  top-quark and $t\bar{t}$ system kinematic observables in proton-proton collisions at a centre-of-mass energy of $\sqrt{s} = 13$ TeV.
+  The data set corresponds to an integrated luminosity of 3.2 fb${}^{-1}$, recorded in 2015 with the ATLAS detector at the CERN Large 
+  Hadron Collider. Events with exactly one electron or muon and at least two jets in the final state are used for the measurement. 
+  Two separate selections are applied that each focus on different top-quark momentum regions, referred to as resolved and boosted 
+  topologies of the $t\bar{t}$ final state. The measured spectra are corrected for detector effects and are compared to several 
+  Monte Carlo simulations by means of calculated $\chi^2$ and $p$-values.'
+BibKey: Aaboud:2017fha,
+BibTex: '@article{Aaboud:2017fha,
+      author         = "Aaboud, M. and others",
+      title          = "{Measurements of top-quark pair differential
+                        cross-sections in the lepton+jets channel in $pp$
+                        collisions at   $\sqrt{s}=13$ TeV using the ATLAS
+                        detector}",
+      collaboration  = "ATLAS",
+      journal        = "JHEP",
+      volume         = "11",
+      year           = "2017",
+      pages          = "191",
+      doi            = "10.1007/JHEP11(2017)191",
+      eprint         = "1708.00727",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-EP-2017-058",
+      SLACcitation   = "%%CITATION = ARXIV:1708.00727;%%"
+}'
