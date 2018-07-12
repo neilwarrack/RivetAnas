@@ -250,7 +250,7 @@ FourMomentum lb4p = add(lepton4p, bJet4p);
 	cout << "top!"<<endl;
 	_c_fid_t->fill(event.weight()) ;
 
-	_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+	_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT()/GeV, event.weight()) ;
 	_h_AbsPtclDiffXsecTY->fill( pseudoTop4p.absrap(), event.weight()) ;
 
 	_h_NrmPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
@@ -264,7 +264,7 @@ FourMomentum lb4p = add(lepton4p, bJet4p);
 	cout << "anti-top!"<< endl;
 	_c_fid_tbar->fill(event.weight()) ;
 
-	_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
+	_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.pT()/GeV, event.weight()) ;
 	_h_AbsPtclDiffXsecTbarY->fill( pseudoTop4p.absrap(), event.weight()) ;
 
 	_h_NrmPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
