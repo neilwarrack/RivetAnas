@@ -6,7 +6,7 @@
 #include "Rivet/Projections/FastJets.hh"
 #include "Rivet/Projections/PromptFinalState.hh"
 //#include "Rivet/Projections/MissingMomentum.hh"
-//#include "Rivet/Projections/PartonicTops.hh"
+#include "Rivet/Projections/PartonicTops.hh"
 #include "Rivet/Projections/VetoedFinalState.hh"
 
 // ============= Neil's Debug Toolkit ============== //
@@ -43,25 +43,57 @@ namespace Rivet {
     /// Book histograms and initialise projections before the run
     void init() {
 
-
+      const FinalState fs;
+      const FinalState particlefs;
+	    
       // Define Cuts
+      Cut lepCuts = ( Cuts::abseta < 2.5  ) & ( Cuts::pT > 25*GeV );
       Cut plJetLepCuts = ( Cuts::abseta < 2.5  ) & ( Cuts::pT > 25*GeV ); 
-
+      
 
       // Initialise and Register Projections
 
-      const FinalState particlefs;
+
       //      declare(PartonicTops(PartonicTops::E_MU), "LeptonicPartonTops");
       //      declare(FastJets(particlefs, FastJets::ANTIKT, 0.4), "particleAntiKt04Jets"); 
 
       //      FastJets jets(vfs, FastJets::ANTIKT, 0.4);
 
 
-      // Find and dress particle level electrons and muons
+      // Projetions for (particle level) charged leptons
+      // (dressed prompt electrons and muons, including form tau decays)
+      
+      IdentifiedFinalState lepfs(fs, {PID::ELECTRON, -PID::ELECTRON, PID::MUON, -PID::MUON});
+      PromptFinalState promptLeptons(lepfs,true); // bool accepts tau decays
+      IdentifiedFinalState photons(fs, {PID::PHOTON, -PID::PHOTON});
+      DressedLeptons leptons(photons, promptLeptons, 0.1, lepCuts);
+      declare(leptons, "Leptons");
+
+      // Find neutrinos for jet clustering
+      IdentifiedFinalState neutrinos;
+      neutrinos.acceptNeutrinos();
+      PromptFinalState promptNeutrinos(neutrinos);
+      promptNeutrinos.acceptTauDecays();
+
+      // Project jets
+      VetoedFinalState vfs;
+      vfs.addVetoOnThisFinalState(promptNeutrinos);
+      vfs.addVetoOnThisFinalState(leptons);
+      FastJets jets(vfs, FastJets::ANTIKT, 0.4);
+      declareProjection(jets, "Jets");
+
+
+      // Auxiliry projection for ttbar filter
+      declare(PartonicTops(PartonicTops::ALL), "PartonicTops");
+      
+
+
+      ////////////////////////
+      /*
       IdentifiedFinalState partelectronidfs(particlefs);
       partelectronidfs.acceptIdPair(PID::ELECTRON);
       declareProjection(partelectronidfs, "electrons");
-
+      
       IdentifiedFinalState partmuonidfs(particlefs);
       partmuonidfs.acceptIdPair(PID::MUON);
       declareProjection(partmuonidfs, "muons");
@@ -73,40 +105,11 @@ namespace Rivet {
       declareProjection(dressedElectrons, "dressedElectrons");
       DressedLeptons dressedMuons(photonidfs, partmuonidfs, 0.1, plJetLepCuts, true);
       declareProjection(dressedMuons, "dressedMuons");
-
-      // Find neutrinos for jet clustering
-      IdentifiedFinalState neutrinoidfs;
-      neutrinoidfs.acceptNeutrinos();
-      PromptFinalState neutrinopfs(neutrinoidfs);
-      neutrinopfs.acceptTauDecays(true);
-
-      // Jet clustering.
-      VetoedFinalState vfs;
-      //vfs.vetoNeutrinos();
-      vfs.addVetoOnThisFinalState(dressedElectrons);
-      vfs.addVetoOnThisFinalState(dressedMuons);
-      vfs.addVetoOnThisFinalState(neutrinopfs);
-      const FastJets jets(vfs, FastJets::ANTIKT, 0.4);
-      //jets.useInvisibles(true); // ??? What does this do?
-      declareProjection(jets, "Jets");
-
-
-      /*
-      // MET (prompt neutrinos)
-      VetoedFinalState ivfs;
-      ivfs.addVetoOnThisFinalState(VisibleFinalState());
-      declare(PromptFinalState(ivfs), "MET");
-
-      // Jets
-      VetoedFinalState jet_fs;
-      jet_fs.vetoNeutrinos();
-      jet_fs.addVetoPairId(PID::MUON);
-      const FastJets fastjets(jet_fs, FastJets::ANTIKT, 0.4);
-      declare(fastjets, "Jets");
       */
+
       // Book Histograms
-      //inclusive = bookHisto1D("Inclusive");
-      fiducial  = bookHisto1D("Fiducial");
+      _c_inclusive = bookCounter("Inclusive");
+      _c_fiducial  = bookCounter("Fiducial");
 
     }
 
@@ -114,107 +117,56 @@ namespace Rivet {
     /// Perform the per-event analysis
     void analyze(const Event& event) {
 
-      //      const Jets jets = apply<FastJets>(event, "Jets").jetsByPt();     
-
+      
       const double weight = event.weight();
 
-      // Define success/fail flags
-      bool pl_fail = false;
+      
+      // Quick veto on non ttbar events
+      if (applyProjection<PartonicTops>(event, "PartonicTops").particles().size() < 2 ) vetoEvent; 
+      _c_inclusive->fill(weight);
+      
+      // Find particle level objects
+      const Jets jets = apply<FastJets>(event, "Jets").jetsByPt(Cuts::pT > 25*GeV && Cuts::abseta < 2.5);
+      const Particles leptons = applyProjection<DressedLeptons>(event, "Leptons").particlesByPt();
+
+      // Veto any events without single prompt charged lepton
+      if (leptons.size() != 1) vetoEvent;
+      
+      // jet multiplicity veto
+      if (jets.size() < 3) vetoEvent;
+
+      // jet lepton overlap veto
+      for (const Jet& j : jets){
+	if (deltaR(j,leptons[0]) < 0.4) vetoEvent; 
+	}
+
+
     
-      vector<DressedLepton> dressedElectrons = applyProjection<DressedLeptons>( event, "dressedElectrons").dressedLeptons();
-      vector<DressedLepton> dressedMuons     = applyProjection<DressedLeptons>( event, "dressedMuons"    ).dressedLeptons();
-
-
-      // Particle level jets
-      //      const Jets pl_jets = apply<FastJets>(event, "particleAntiKt04Jets").jetsByPt();
-      const Jets jets = apply<FastJets>(event, "Jets").jetsByPt(Cuts::pT > 25*GeV && Cuts::abseta < 2.5);    
-      //const Jets jets = apply<FastJets>(event, "Jets").jetsByPt(plJetLepCuts);
-      //      const Jets& jets = applyProjection<FastJets>(event, "particleAntiKt04Jets").jetsByPt();     
-      //     particleAntiKt04Jets"); 
-      //      unsigned int jetMultiplicity = jets.size();
-      //if ( jetMultiplicity <= 2 ) { N1; pl_fail = true; }
-      bool single_electron = (dressedElectrons.size() == 1) && (dressedMuons.empty());
-      bool single_muon     = (dressedMuons.size() == 1) && (dressedElectrons.empty());
-
-      DressedLepton* lepton = nullptr;
-      if (single_electron)   lepton = &dressedElectrons[0];
-      else if (single_muon)  lepton = &dressedMuons[0];
-      
-      if(!single_electron && !single_muon) { N1; RET; pl_fail = true; vetoEvent;}
-
-      //      // (Particle level) Signal Region 2 requires a single isolated lepton
-      //bool pl_singleLepton = ( leptonicPartonTops.size() == 1 );
-      //if ( pl_singleLepton ) {
-
-      //Particle pl_selectedLepton;
-      //	pl_selectedLepton = leptonicPartonTops[0];
-
-
-	//double pl_leptonPhi = leptonicPartonTops[0].phi();
-	//double pl_leptonPT =  leptonicPartonTops[0].pT();
-
-	/// reject event if a selected lepton is at a distance R < 0.4 of selected jet.
-      
-	for (const Jet i : jets) {
-	  if (deltaR(i, *lepton) <= 0.4) { N2; RET; pl_fail = true; vetoEvent;}
-	}	
-	
-	/*
-	if (pl_fail) { N8; RET; vetoEvent;} 
-	else {
-	*/	  
-	N9;
-	RET;
-	
-	fiducial->fill(8.0, weight);      
-  //}
-
+    // fill fiducial counter
+    _c_fiducial->fill(weight);
+     
     }
 
 
-      /*
-      cout << endl;////////////////////////// P R I N T //////////////////////////////////
-      cout << " dl_muons.size() = " <<  dl_muons.size() << endl;
-      cout << " dl_electrons.size() = " << dl_electrons.size() << endl;
-      cout << " leptonicPartonTops.size() = " << leptonicPartonTops.size() << endl;
-      */
-      //bool good2 = ( dl_muons.size() + dl_electrons.size() == leptonicPartonTops.size() );
-      //      if (!good2) WORRY;
-      /*
-      cout << "__________";
-      cout << endl;///////////////////////////////////////////////////////////////////////
-      */
-
-  
-
-
+    
     /// Normalise histograms etc., after the run
     void finalize() {
 
-      //      normalize(_h_YYYY); // normalize to unity
-      //scale( inclusive, crossSection()/picobarn/sumOfWeights());
-      scale( fiducial,  crossSection()/picobarn/sumOfWeights()); // norm to cross section
-      cout<<"sum of weights = " << sumOfWeights() << endl; 
-      cout<<"cross section = " << crossSection() << endl;
+      double scaleFactor = crossSection()/picobarn/sumOfWeights();
+
+      scale( _c_inclusive, scaleFactor);
+      scale( _c_fiducial,  scaleFactor);
+     
     }
 
 
     //@}
+private:
 
-
-    /// @name Histograms
-    //@{
-
-    Histo1DPtr fiducial;
-
- //@}
-
-
+    CounterPtr _c_fiducial, _c_inclusive;
 };
 
 
   // The hook for the plugin system
   DECLARE_RIVET_PLUGIN(ATLAS_2017_I1644099);
-
-
 }

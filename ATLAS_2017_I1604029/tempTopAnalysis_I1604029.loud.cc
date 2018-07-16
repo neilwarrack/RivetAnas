@@ -175,7 +175,7 @@ namespace Rivet {
       
       if ( jets.size() < 4) {
 	cout << "not enough jets to proceed. veto!";RET;
-	N3; RET; //NB: N3 is used twice! (see event selection section ~L460)
+	N3; RET; //NB: N3 is used more than once!!
 	vetoEvent;
       }
       
@@ -263,9 +263,9 @@ namespace Rivet {
       }
       cout << "END: Lepton Testing<<<<<<<<<<<<<<<<<<<<<<<<<<<<";RET;     
       // end of lepton cuts test*************************************
-     
       
-      // find muons that are seperated form jets.
+      
+      // find muons that are seperated form jets and keep electrons.
       // From paper: "Muons within a cone of ∆R = 0.4 around a jet are removed"
       cout << "leptons.size()=" << leptons.size(); RET;
       if (leptons.empty()) {
@@ -273,12 +273,12 @@ namespace Rivet {
 	N2; RET;
 	vetoEvent;
       }
-	  cout << "searching through DressedLeptons...";RET;
-	for (const Particle& l : leptons){
-	  if (l.abspid() == PID::MUON){
-	    cout << "found:muon";RET;
-	    for (const Jet& j : jets){
-	      if (deltaR(j, l) < 0.4) tooClose = true;
+      cout << "searching through DressedLeptons...";RET;
+      for (const Particle& l : leptons){
+	if (l.abspid() == PID::MUON){
+	  cout << "found:muon";RET;
+	  for (const Jet& j : jets){
+	    if (deltaR(j, l) < 0.4) tooClose = true;
 	  }
 	  
 	  if (!tooClose) {
@@ -296,10 +296,16 @@ namespace Rivet {
 	}
       }
       
-
-	
+      
+      
       // remove jet closest to electron if closer than deltaR = 0.2
       // From paper: "closest jet within a cone of ∆R = 0.2 around an electron [is removed]."      
+      // THE PAPER IS WRONG!!!!!!
+      // THIS IS A MISTAKE!!!!
+      // But I'm keeping the code, just in case I need it....
+      // skip to the end of this section for real jet removal
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      /*
       double el_dR_min = 0.2 ;
       if (!electrons.empty()){
 	cout << "attempt to remove jet closest to electron(s) if closer than deltaR = 0.2...";RET; 
@@ -338,6 +344,17 @@ namespace Rivet {
 	  selectedJetsEl.clear();
 	}
       }
+      */
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      // Real jet removal (stolen from submitted Rivet ATLAS_2017_I1604029)
+      // jet photon/electron overlap removal                                                              
+      for (const DressedLepton& e : electrons)
+        ifilter_discard(jets, deltaRLess(e, 0.2, RAPIDITY));
+     
+
+
+
       
       // Test photons: START****************************************************************
       cout << "START: Photon Testing>>>>>>>>>>>>>>>>>>>>>>>>>>";RET;
@@ -394,6 +411,9 @@ namespace Rivet {
       
       // remove jet closest to photon if closer than deltaR = 0.1
       // from paper: "closest jet within a cone of ∆R = 0.1 around a photon [is removed]"
+      // THIS IS WRONG AS WELL!!!!!!!!!!!
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      /*
       cout << "attempt to remove jet closest to photon if dR_min < 0.1..."; RET;
       if (hePhotons.empty()) {
 	cout << "no high energy photons in event! Veto!"; RET;
@@ -436,7 +456,19 @@ namespace Rivet {
 	  }
 	  selectedJets.clear();
       }
-      
+      */
+      //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+      //do real jet removal for photons:
+      for (const Particle& ph : hePhotons)
+        ifilter_discard(jets, deltaRLess(ph, 0.1, RAPIDITY));
+     
+      if ( jets.size() < 4) {
+	cout << "not enough jets to proceed. veto!";RET;
+	N3; RET; //NB: N3 is used more than once (for the same veto though!)
+	vetoEvent;
+      }
+     
     
 
       // For print out only - remove in final anaysis -
@@ -452,6 +484,7 @@ namespace Rivet {
       if (!electrons.empty()){
 	cout << "attempting to removie any electrons that are within deltaR = 0.4 of a jet"; RET;
 	cout << "considering " << electrons.size() << " electrons";RET;
+
 	for (const Particle& e : electrons){
 	  for (const Jet& j : selectedJets){
 	    if ( deltaR(e, j) < 0.4 ) tooClose = true;
