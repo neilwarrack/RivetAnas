@@ -33,12 +33,12 @@ namespace Rivet {
 
   ///@brief: ttbar differential cross-sections in dilepton channel at 13 TeV
   // From paper: "events with leptons associated with tau lepton decays are treated as background"
-  class TEMP2 : public Analysis {
+  class CMS_2017_I1620050 : public Analysis {
   public:
 
 
     // Constructor
-    DEFAULT_RIVET_ANALYSIS_CTOR(TEMP2);
+    DEFAULT_RIVET_ANALYSIS_CTOR(CMS_2017_I1620050);
 
     // Book histograms and initialise projections before the run
     void init() {
@@ -80,8 +80,8 @@ namespace Rivet {
       declare(PartonicTops(PartonicTops::ALL),"PartonicTops");
 
       // BOOK HISTOGRAMS
-      //      _h["pt"] = bookHisto1D(2,1,1);
-      //_h["eta"] = bookHisto1D(3,1,1);
+      _h["pt_lep"] = bookHisto1D(1,1,1);
+      _h["pt_jet"] = bookHisto1D(1,1,2);
 
     }
 
@@ -120,7 +120,7 @@ namespace Rivet {
 
       
       // veto non dileptonic events
-      if (leptons.size() != 2 ) (N2;RET;vetoEvent;}//debug
+      if (leptons.size() != 2 ) {N2;RET;vetoEvent;}//debug
       //if (leptons.size() != 2 ) vetoEvent;
       cout << "No. of neutrinos(prompt):" << promptNeutrinos.size() << endl;
       if (promptNeutrinos.size() < 2) {N3;RET;vetoEvent;}//debug
@@ -135,7 +135,7 @@ namespace Rivet {
 	for (Particle n : promptNeutrinos){ cout << "p" ;}
 	cout << endl;
       */
-            FourMomentum p4w1, p4w2, p4lep1=leptons[0], p4lep2=leptons[1], p4n1, p4n2, selectedW1, selectedW2;
+      FourMomentum p4w1, p4w2, p4lep1=leptons[0], p4lep2=leptons[1], p4n1, p4n2, selectedW1, selectedW2;
       int ctr_n1=0, ctr_n2=0;
       double minMassSumW=8000*GeV;
       
@@ -218,10 +218,12 @@ namespace Rivet {
       
       // Fill single top histos
 
-      _h["pt_lep"]->fill(  lepton[0].pT()/GeV,     weight);
-      _h["pt_lep"]->fill(  lepton[1].pT()/GeV,     weight);
+      _h["pt_lep"]->fill(  leptons[0].pT()/GeV,     weight);
+      _h["pt_lep"]->fill(  leptons[1].pT()/GeV,     weight);
+
       _h["pt_jet"]->fill(  selectedBJet1.pT()/GeV, weight);
       _h["pt_jet"]->fill(  selectedBJet2.pT()/GeV, weight);
+      /*
       _h["pt_top"]->fill(  selectedTop1.pT()/GeV,  weight);
       _h["pt_top"]->fill(  selectedTop2.pT()/GeV,  weight);
       _h["rap_top"]->fill( selectedTop1.rap(),     weight);
@@ -234,16 +236,18 @@ namespace Rivet {
       _h["rap_ttbar"]->fill(  ttbar.rap(),    weight);
       _h["mass_ttbar"]->fill( ttbar.mass(),   weight);
       _h["dPhi_ttbar"]->fill( dPhi,           weight);
-      
+      */
 
       
-      //_h["eta"]->fill(photon.abseta(), weight);
+
     }
 
     // Normalise histograms etc., after the run
     void finalize() {
+      const double normto( 1.0 / sumOfWeights() );
+      for (auto &hist : _h) {  scale(hist.second, normto);  }
 
-      for (auto &hist : _h) {  normalize(hist.second);  }
+      //      for (auto &hist : _h) {  normalize(hist.second);  }
     }
 
   private:
@@ -252,5 +256,5 @@ namespace Rivet {
   };
 
   // The hook for the plugin system
-  DECLARE_RIVET_PLUGIN(TEMP2);
+  DECLARE_RIVET_PLUGIN(CMS_2017_I1620050);
 }
