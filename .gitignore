@@ -21,10 +21,18 @@ compileHook.sh
 doRivet.sh
 runPythia.sh
 
-# sub-directories
+# sub-directories ("**" doesn't work on old version of git run on PPE system!)
 **/rivet-plots/
+rivet-plots/
 #/ValidationPlots
-/rivet-plots/
+
+
+
+# specific subdirs
+/validation_plots
+ATLAS_2017_I1604029/rivet-plots10000/
+RivetsFromRivet/ATLAS_2017_I1614149/validation_plots/ATLAS_2017_I1614149/*
+RivetsFromRivet/ATLAS_2017_I1604029/validation_plots/
 
 # Prerequisites
 *.d

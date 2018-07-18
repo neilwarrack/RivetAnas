@@ -1,0 +1,39 @@
+# BEGIN PLOT
+LegendOnly=/ATLAS_2014_I1304289/d04-x01-y01 //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d04-x01-y01
+DrawOnly=/ATLAS_2014_I1304289/d04-x01-y01 //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d04-x01-y01
+Title=$t\bar{t}$ system absolute rapidity
+RatioPlotReference=/ATLAS_2014_I1304289/d04-x01-y01
+RatioPlot=1
+LogY=1
+XLabel=$\lvert y_{t\bar{t}} \rvert$
+YLabel=$\frac{1}{\sigma}\frac{d\sigma}{d\lvert y_{t\bar{t}} \rvert}$
+Legend=1
+# END PLOT
+
+# BEGIN HISTO1D /ATLAS_2014_I1304289/d04-x01-y01
+ConnectBins=0
+ErrorBars=1
+Path=/ATLAS_2014_I1304289/d04-x01-y01
+PolyMarker=*
+Title=Data
+# xlow	 xhigh	 val	 errminus	 errplus
+0.000000e+00	5.000000e-01	8.591770e-01	2.814378e-02	2.814378e-02
+5.000000e-01	1.000000e+00	6.421160e-01	1.059005e-02	1.059005e-02
+1.000000e+00	2.500000e+00	1.662350e-01	1.255707e-02	1.255707e-02
+# END HISTO1D
+
+
+# BEGIN HISTO1D //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d04-x01-y01
+LineColor=red
+LineStyle=solid
+Path=//home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d04-x01-y01
+ScaledBy=4.24268137462876528e-04
+Title=Rivet
+XLabel=~
+YLabel=~
+# xlow	 xhigh	 val	 errminus	 errplus
+0.000000e+00	5.000000e-01	7.840476e-01	2.579327e-02	2.579327e-02
+5.000000e-01	1.000000e+00	6.542214e-01	2.356121e-02	2.356121e-02
+1.000000e+00	2.500000e+00	1.872437e-01	7.277432e-03	7.277432e-03
+# END HISTO1D
+

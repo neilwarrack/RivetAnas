@@ -1,0 +1,43 @@
+# BEGIN PLOT
+LegendOnly=/ATLAS_2014_I1304289/d02-x01-y01 //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d02-x01-y01
+DrawOnly=/ATLAS_2014_I1304289/d02-x01-y01 //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d02-x01-y01
+Title=$t\bar{t}$ system mass
+RatioPlotReference=/ATLAS_2014_I1304289/d02-x01-y01
+RatioPlot=1
+LogY=1
+XLabel=$m_{t\bar{t}}$ [GeV]
+YLabel=$\frac{1}{\sigma}\frac{d\sigma}{dm_{t\bar{t}}}$ $\text{[TeV}^{-1}\text{]}$
+Legend=1
+# END PLOT
+
+# BEGIN HISTO1D /ATLAS_2014_I1304289/d02-x01-y01
+ConnectBins=0
+ErrorBars=1
+Path=/ATLAS_2014_I1304289/d02-x01-y01
+PolyMarker=*
+Title=Data
+# xlow	 xhigh	 val	 errminus	 errplus
+2.500000e+02	4.500000e+02	2.521720e+00	8.382586e-02	8.382586e-02
+4.500000e+02	5.500000e+02	2.759990e+00	8.767042e-02	8.767042e-02
+5.500000e+02	7.000000e+02	1.005220e+00	5.019059e-02	5.019059e-02
+7.000000e+02	9.500000e+02	2.254900e-01	1.593339e-02	1.593339e-02
+9.500000e+02	2.700000e+03	7.143480e-03	7.232222e-04	7.232222e-04
+# END HISTO1D
+
+
+# BEGIN HISTO1D //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d02-x01-y01
+LineColor=red
+LineStyle=solid
+Path=//home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d02-x01-y01
+ScaledBy=4.24268137462876560e-01
+Title=Rivet
+XLabel=~
+YLabel=~
+# xlow	 xhigh	 val	 errminus	 errplus
+2.500000e+02	4.500000e+02	2.411964e+00	7.153040e-02	7.153040e-02
+4.500000e+02	5.500000e+02	2.698345e+00	1.069964e-01	1.069964e-01
+5.500000e+02	7.000000e+02	1.071984e+00	5.506413e-02	5.506413e-02
+7.000000e+02	9.500000e+02	2.834111e-01	2.193101e-02	2.193101e-02
+9.500000e+02	2.700000e+03	9.212680e-03	1.494494e-03	1.494494e-03
+# END HISTO1D
+

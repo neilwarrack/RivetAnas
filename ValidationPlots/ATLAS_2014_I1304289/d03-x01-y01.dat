@@ -1,0 +1,41 @@
+# BEGIN PLOT
+LegendOnly=/ATLAS_2014_I1304289/d03-x01-y01 //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d03-x01-y01
+DrawOnly=/ATLAS_2014_I1304289/d03-x01-y01 //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d03-x01-y01
+Title=$t\bar{t}$ system transverse momentum
+RatioPlotReference=/ATLAS_2014_I1304289/d03-x01-y01
+RatioPlot=1
+LogY=1
+XLabel=$p_T^{t\bar{t}}$ [GeV]
+YLabel=$\frac{1}{\sigma}\frac{d\sigma}{dp_T^{t\bar{t}}}$ $\text{[TeV}^{-1}\text{]}$
+Legend=1
+# END PLOT
+
+# BEGIN HISTO1D /ATLAS_2014_I1304289/d03-x01-y01
+ConnectBins=0
+ErrorBars=1
+Path=/ATLAS_2014_I1304289/d03-x01-y01
+PolyMarker=*
+Title=Data
+# xlow	 xhigh	 val	 errminus	 errplus
+0.000000e+00	4.000000e+01	1.408150e+01	8.982408e-01	8.982408e-01
+4.000000e+01	1.700000e+02	2.992010e+00	2.278647e-01	2.278647e-01
+1.700000e+02	3.400000e+02	2.505200e-01	4.163835e-02	4.163835e-02
+3.400000e+02	1.000000e+03	7.864940e-03	1.396531e-03	1.396531e-03
+# END HISTO1D
+
+
+# BEGIN HISTO1D //home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d03-x01-y01
+LineColor=red
+LineStyle=solid
+Path=//home/ppe/n/nwarrack/RivetAnas/ATLAS_2014_I1304289/Rivet.yoda/ATLAS_2014_I1304289/d03-x01-y01
+ScaledBy=4.24268137462876560e-01
+Title=Rivet
+XLabel=~
+YLabel=~
+# xlow	 xhigh	 val	 errminus	 errplus
+0.000000e+00	4.000000e+01	1.333262e+01	3.760521e-01	3.760521e-01
+4.000000e+01	1.700000e+02	3.191802e+00	1.020626e-01	1.020626e-01
+1.700000e+02	3.400000e+02	2.770221e-01	2.629378e-02	2.629378e-02
+3.400000e+02	1.000000e+03	7.071136e-03	2.132028e-03	2.132028e-03
+# END HISTO1D
+

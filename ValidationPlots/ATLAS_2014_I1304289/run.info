@@ -1,0 +1,1 @@
+run-pythia -n 10000 -e 7000 -c Top:all=on -o fifo.hepmc &
