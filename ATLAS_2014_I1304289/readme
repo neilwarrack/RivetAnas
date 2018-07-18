@@ -1,4 +1,6 @@
-this paper has a hepdata entry which is complete
-https://arxiv.org/abs/1407.0371
-https://hepdata.net/record/ins1304289
-
+Title: "Measurements of normalized differential cross-sections for ttbar production in pp collisions at sqrt(s) = 7 TeV using the ATLAS detector"
+Notes: this paper has a hepdata entry which is complete
+arxiv: https://arxiv.org/abs/1407.0371
+hepdata: https://hepdata.net/record/ins1304289
+particle/fiducial:
+parton:
