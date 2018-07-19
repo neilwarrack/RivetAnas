@@ -1,0 +1,27 @@
+BEGIN YODA_COUNTER_V2 /CMS_2017_I1607560/fiducial_XSec
+Path: /CMS_2017_I1607560/fiducial_XSec
+ScaledBy: 4.56103011222847030e+01
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+5.929339e+02	2.704389e+04	1.300000e+01
+END YODA_COUNTER_V2
+
+BEGIN YODA_COUNTER_V2 /_EVTCOUNT
+Path: /_EVTCOUNT
+Title: 
+Type: Counter
+---
+# sumW	 sumW2	 numEntries
+5.000000e+03	5.000000e+03	5.000000e+03
+END YODA_COUNTER_V2
+
+BEGIN YODA_SCATTER1D_V2 /_XSEC
+Path: /_XSEC
+Title: 
+Type: Scatter1D
+---
+# xval	 xerr-	 xerr+
+2.280515e+02	1.692345e+00	1.692345e+00
+END YODA_SCATTER1D_V2
