@@ -1,0 +1,43 @@
+Name: CMS_2017_I1620050
+Year: 2017
+Summary: <Insert short CMS_2017_I1620050 description>
+Experiment: CMS
+Collider: LHC
+InspireID: 1620050
+Status: UNVALIDATED
+Authors:
+ - Your Name <your@email.address>
+#References:
+#- '<Example: Eur.Phys.J. C76 (2016) no.7, 392>'
+#- '<Example: DOI:10.1140/epjc/s10052-016-4184-8>'
+#- '<Example: arXiv:1605.03814>'
+RunInfo: <Describe event types, cuts, and other general generator config tips.>
+NeedCrossSection: no
+#Beams: <Insert beam pair(s), e.g. [p+, p+] or [[p-, e-], [p-, e+]]>
+#Energies: <Run energies or beam energy pairs in GeV, e.g. [13000] or [[8.0, 3.5]] or [630, 1800]. Order pairs to match "Beams">
+Description:
+  '<A fairly long description, including what is measured
+  and if possible what it is useful for in terms of MC validation
+  and tuning. Use LaTeX for maths like $\pT > 50\;\GeV$.>'
+BibKey: Sirunyan:2017mzl
+BibTeX: '@article{Sirunyan:2017mzl,
+      author         = "Sirunyan, A. M. and others",
+      title          = "{Measurement of normalized differential $
+                        \mathrm{t}\overline{\mathrm{t}} $ cross sections in the
+                        dilepton channel from pp collisions at $ \sqrt{s}=13 $
+                        TeV}",
+      collaboration  = "CMS",
+      journal        = "JHEP",
+      volume         = "04",
+      year           = "2018",
+      pages          = "060",
+      doi            = "10.1007/JHEP04(2018)060",
+      eprint         = "1708.07638",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CMS-TOP-16-007, CERN-EP-2017-120",
+      SLACcitation   = "%%CITATION = ARXIV:1708.07638;%%"
+}'
+ToDo:
+ - Implement the analysis, test it, remove this ToDo, and mark as VALIDATED :-)
+
