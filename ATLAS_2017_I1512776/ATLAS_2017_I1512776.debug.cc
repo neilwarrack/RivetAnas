@@ -83,26 +83,44 @@ namespace Rivet {
       jet_input.addVetoOnThisFinalState(dressedMuons);
       declare(FastJets(jet_input, FastJets::ANTIKT, 0.4), "Jets");
 
-      // do parton level analysis seperatelty!!
-      //declare(PartonicTops(PartonicTops::E_MU), "LeptonicTops") ;
+      // The missing Et requirement
+      MissingMomentum mET;
+      declare(mET, "MET");
+      
+      // for parton level analysis
+      declare(PartonicTops(PartonicTops::E_MU), "LeptonicTops") ;
       //declare(PartonicTops(PartonicTops::ALL ), "AllPartonicTops") ;
       
       // book counters
       _c_fid_t =    bookCounter("fiducialXSec_top");
       _c_fid_tbar = bookCounter("fiducialXSec_anti-top");
-      // book histograms
-      // top quark differential cross sections                      
-      _h_AbsPtclDiffXsecTPt   = bookHisto1D(1,1,1);
-      _h_AbsPtclDiffXsecTY    = bookHisto1D(1,1,2);
-      _h_NrmPtclDiffXsecTPt   = bookHisto1D(2,1,1);
-      _h_NrmPtclDiffXsecTY    = bookHisto1D(2,1,2);
+
       
-      // top antiquark differential cross sections                  
-      _h_AbsPtclDiffXsecTbarPt   = bookHisto1D(1,1,3);
+      // book histograms
+      // top quark differential cross sections at particle level
+      _h_AbsPtclDiffXsecTPt   = bookHisto1D(1,1,1);
+      _h_AbsPtclDiffXsecTY    = bookHisto1D(1,1,3);
+      _h_NrmPtclDiffXsecTPt   = bookHisto1D(2,1,1);
+      _h_NrmPtclDiffXsecTY    = bookHisto1D(2,1,3);
+      
+      // top antiquark differential cross sections at particle level    
+      _h_AbsPtclDiffXsecTbarPt   = bookHisto1D(1,1,2);
       _h_AbsPtclDiffXsecTbarY    = bookHisto1D(1,1,4);
-      _h_NrmPtclDiffXsecTbarPt   = bookHisto1D(2,1,3);
+      _h_NrmPtclDiffXsecTbarPt   = bookHisto1D(2,1,2);
       _h_NrmPtclDiffXsecTbarY    = bookHisto1D(2,1,4);
 
+      // top quark differential cross sections at parton level
+      _h_AbsPrtnDiffXsecTPt   = bookHisto1D(3,1,1);
+      _h_AbsPrtnDiffXsecTY    = bookHisto1D(3,1,3);
+      _h_NrmPrtnDiffXsecTPt   = bookHisto1D(4,1,1);
+      _h_NrmPrtnDiffXsecTY    = bookHisto1D(4,1,3);
+      
+      // top antiquark differential cross sections at parton level    
+      _h_AbsPrtnDiffXsecTbarPt   = bookHisto1D(3,1,2);
+      _h_AbsPrtnDiffXsecTbarY    = bookHisto1D(3,1,4);
+      _h_NrmPrtnDiffXsecTbarPt   = bookHisto1D(4,1,2);
+      _h_NrmPrtnDiffXsecTbarY    = bookHisto1D(4,1,4);
+      
 
       
       // debug hepmc print-out
@@ -113,7 +131,7 @@ namespace Rivet {
 
     /// Perform the per-event analysis
     void analyze(const Event& event) {
-
+    
       BEGIN;
 
       // Find leptons, bosons and jets
@@ -124,33 +142,102 @@ namespace Rivet {
       const WFinder& wFinder_mu = apply<WFinder>(event, "W_Muon");
       const Particles WEl= wFinder_el.bosons();
       const Particles WMu= wFinder_mu.bosons();
-      //const Particles leptonicTops = apply<ParticleFinder>(event, "LeptonicTops").particlesByPt();
+      const Particles leptonicTops = apply<ParticleFinder>(event, "LeptonicTops").particlesByPt();
+      const MissingMomentum misMom = apply<MissingMomentum>(event, "MET");
       //const Particles allPartonicTops = apply<ParticleFinder>(event, "AllPartonicTops").particlesByPt();
 
-      /// Particle-level analysis
-      
-      //      bool particleVeto = false;
 
-      // find jets
+
+      // require exactly one b-jet and at least on other for particle and parton level results
+
       Cut jetCuts = (Cuts::abseta < 4.5 && Cuts::pT > 30*GeV);
       cout << "sizeOfJetsPreFilter=" << jets.size()<< " "; RET;
       ifilter_select(jets, jetCuts);
       cout << "sizeOfJetsPostFilter=" << jets.size()<< " "; RET;
-
-
-      // find and count b-jets
       Jet bJet;
-      bool bJetFound = false;
+      int bJetFound = 0;
       for (const Jet& j : jets){
-        if ( j.bTagged(Cuts::pT > 5*GeV) && j.abseta() < 2.5) {
-	  if (bJetFound){N2;RET;vetoEvent;}//< debug mode!
-	  //if (bJetFound){vetoEvent;}
-	  else {
-	    bJetFound = true;
-	    bJet = j;
-	  }
-	}
+	if (bJetFound == 2) break;
+	if ( j.bTagged(Cuts::pT > 5*GeV) && j.abseta() < 2.5) bJetFound++;
       }
+      
+      if ( jets.size() > 1 && bJetFound == 1 ) {
+	cout << "jet requirements met."; RET;
+      }
+      else {
+	N1;RET;
+	vetoEvent;
+      }
+      
+
+      // missing energy cut for parton and particle level analysis
+      if (misMom.met() < 30*GeV) {
+	N2;RET;
+	vetoEvent;
+      }
+
+
+      
+      /// Parton-level analysis  ///////////////////////////////////////////////
+           
+     
+      if (leptonicTops.size() == 1){ // do partonic analysis
+
+     
+	/*	
+		if ( !allPartonicTops.empty() ){
+		cout << "-Number of Tops:" << allPartonicTops.size(); RET;
+		if ( allPartonicTops.size() != 1 ) {
+		partonVeto = true ;
+		} else {
+		
+		
+		if (allPartonicTops[0].pid() > 0){
+		
+		cout << "q-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();RET;
+		
+		//      _h_AbsPtonDiffXsecTPt->fill(leptonicTops[0].pT(), event.weight());
+		}
+		if (allPartonicTops[0].pid() < 0){
+		
+		cout << "qbar-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();
+		
+		}
+		}
+		}
+	*/
+	if (leptonicTops[0].charge() > 0){ // fill top quark diff xsecs
+	  cout << "parton-level top!"<<endl;
+	  //_c_fid_t->fill(event.weight()) ;
+	  
+	  _h_AbsPrtnDiffXsecTPt->fill( leptonicTops[0].pT()/GeV, event.weight()) ;
+	  _h_AbsPrtnDiffXsecTY->fill(  leptonicTops[0].absrap(), event.weight()) ;
+	  
+	  _h_NrmPrtnDiffXsecTPt->fill( leptonicTops[0].pT(),     event.weight()) ;
+	  _h_NrmPrtnDiffXsecTY->fill(  leptonicTops[0].absrap(), event.weight()) ;
+	  
+	  
+	}
+	else {
+	  cout << "parton-level anti-top!"<< endl;
+	  //_c_fid_tbar->fill(event.weight()) ;
+	  
+	  _h_AbsPrtnDiffXsecTbarPt->fill( leptonicTops[0].pT()/GeV, event.weight()) ;
+	  _h_AbsPrtnDiffXsecTbarY->fill(  leptonicTops[0].absrap(), event.weight()) ;
+	  
+	  _h_NrmPrtnDiffXsecTbarPt->fill( leptonicTops[0].pT(),     event.weight()) ;
+	  _h_NrmPrtnDiffXsecTbarY->fill(  leptonicTops[0].absrap(), event.weight()) ;
+	  
+	}
+	
+	
+      }
+      
+
+
+      /// Particle-level analysis ///////////////////////////////////////////////
+      
+      //      bool particleVeto = false;
 
       if (jets.size() != 2){N3;RET;vetoEvent;} //< debug mode!
       if (!bJetFound)      {N4;RET;vetoEvent;} //< debug mode!
@@ -273,50 +360,19 @@ FourMomentum lb4p = add(lepton4p, bJet4p);
       }
       
       if (!flag){
-	N1;
+	//N1;
 	cout << "should have vetoed by now!"<< endl;
 	if (leptons.empty()) cout << "no leptons!" << endl;
 	
 	cout << "leptons[0].charge()=" << leptons[0].charge();
-	  }
+	  
       
       END;
-      /*
+   
 
 
-     
-
-     /// Parton-level analysis
-     bool partonVeto = false;
-     
-     // find partonic tops                                                                              
-     
-     if ( !allPartonicTops.empty() ){
-     cout << "-Number of Tops:" << allPartonicTops.size(); RET;
-     if ( allPartonicTops.size() != 1 ) {
-     partonVeto = true ;
-     } else {
-     
-     
-     if (allPartonicTops[0].pid() > 0){
-     
-     cout << "q-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();RET;
-     
-     //      _h_AbsPtonDiffXsecTPt->fill(leptonicTops[0].pT(), event.weight());
-     }
-     if (allPartonicTops[0].pid() < 0){
-     
-     cout << "qbar-allPartonicTops[0].pid()=" << allPartonicTops[0].pid();
-     
-     }
-     }
-     }
-     
-     RET;
-      */
-
-      
-    } //< end of analyze()            
+      }
+    }   //< end of analyze()            
 
    
 
@@ -340,10 +396,16 @@ FourMomentum lb4p = add(lepton4p, bJet4p);
       scale({_h_AbsPtclDiffXsecTPt,_h_AbsPtclDiffXsecTY,
 	    _h_AbsPtclDiffXsecTbarPt,_h_AbsPtclDiffXsecTbarY}, SFfb);
 
+      scale({_h_AbsPrtnDiffXsecTPt,_h_AbsPrtnDiffXsecTY,
+	    _h_AbsPrtnDiffXsecTbarPt,_h_AbsPrtnDiffXsecTbarY}, SFfb);
+
       // normalize to unity/1000 (2,1,X)
       normalize({_h_NrmPtclDiffXsecTPt, _h_NrmPtclDiffXsecTY,
 	    _h_NrmPtclDiffXsecTbarPt, _h_NrmPtclDiffXsecTbarY}, 1/1000);
-      
+
+      normalize({_h_NrmPrtnDiffXsecTPt, _h_NrmPrtnDiffXsecTY,
+	    _h_NrmPrtnDiffXsecTbarPt, _h_NrmPrtnDiffXsecTbarY}, 1/1000);
+	   
       
       
       
@@ -370,22 +432,17 @@ FourMomentum lb4p = add(lepton4p, bJet4p);
     /// @name Histograms
     //@{
 
-  CounterPtr _c_fid_t, _c_fid_tbar;
-  Histo1DPtr _h_AbsPtclDiffXsecTPt, _h_AbsPtclDiffXsecTY,
-    _h_NrmPtclDiffXsecTPt, _h_NrmPtclDiffXsecTY,
-    _h_AbsPtclDiffXsecTbarPt, _h_AbsPtclDiffXsecTbarY,
-    _h_NrmPtclDiffXsecTbarPt,  _h_NrmPtclDiffXsecTbarY,
-    _h_AbsPtonDiffXsecTPt;
-  
-    //@}
+CounterPtr _c_fid_t, _c_fid_tbar;
+Histo1DPtr _h_AbsPtclDiffXsecTPt, _h_AbsPtclDiffXsecTY, _h_NrmPtclDiffXsecTPt, _h_NrmPtclDiffXsecTY, _h_AbsPtclDiffXsecTbarPt, _h_AbsPtclDiffXsecTbarY, _h_NrmPtclDiffXsecTbarPt,  _h_NrmPtclDiffXsecTbarY, _h_AbsPrtnDiffXsecTPt, _h_AbsPrtnDiffXsecTY, _h_NrmPrtnDiffXsecTPt, _h_NrmPrtnDiffXsecTY, _h_AbsPrtnDiffXsecTbarPt, _h_AbsPrtnDiffXsecTbarY, _h_NrmPrtnDiffXsecTbarPt, _h_NrmPrtnDiffXsecTbarY;
 
-  std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;
+//@}
+
+std::unique_ptr<HepMC::IO_GenEvent> _hepmcout;
 
   };
 
 
-  // The hook for the plugin system
-  DECLARE_RIVET_PLUGIN(ATLAS_2017_I1512776);
-
+// The hook for the plugin system
+DECLARE_RIVET_PLUGIN(ATLAS_2017_I1512776);
 
 }
