@@ -65,7 +65,10 @@ namespace Rivet {
       IdentifiedFinalState electron_fs;
       electron_fs.acceptIdPair(PID::ELECTRON);
       PromptFinalState promptElectrons(electron_fs, true); //< "true" accepts as 'prompt' particles from prompt taus
-      DressedLeptons dressedElectrons(photons, promptElectrons, 0.1, e_muCuts, true);//< "true" includes non-prompt photons
+      DressedLeptons dressedElectrons(photons, promptElectrons, 0.1, e_muCuts, false);
+      // NB: the above bool ("false") avoids dressing using 'decay photons'...
+      // NB: 'Decay photons' are defined in depricated manner, using:
+      // NB: fromDecay() const { return fromHadron() || fromPromptTau(); } 
       declare(dressedElectrons, "DressedElectrons");
 
 
@@ -73,18 +76,24 @@ namespace Rivet {
       IdentifiedFinalState muon_fs;
       muon_fs.acceptIdPair(PID::MUON);
       PromptFinalState promptMuons(muon_fs, true); 
-      DressedLeptons dressedMuons(photons, promptMuons, 0.1, e_muCuts, true); 
+      DressedLeptons dressedMuons(photons, promptMuons, 0.1, e_muCuts, false); 
       declare(dressedMuons, "DressedMuons");
 
 
-      /////////////////////// NEEDED???? ////////////////////////
-      WFinder w_electron(electron_fs, e_muCuts,PID::ELECTRON,35*GeV, 8000*GeV, 30*GeV, 0.1,  WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY,WFinder::TRACK,  WFinder::TRANSMASS);
+      // Particle-level W (with electron decay)
+      WFinder w_el(fs, e_muCuts,PID::ELECTRON, 35*GeV, 8000*GeV, 30*GeV, 0.1,
+		   WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY,
+		   WFinder::TRACK,  WFinder::TRANSMASS);
       // notes: ET_miss>30GeV (see: https://arxiv.org/pdf/1502.05923.pdf)
       // notes: mass window > 35GeV (< transverse mass) (see: https://arxiv.org/pdf/1502.05923.pdf)
-      declare(w_electron, "W_Electron");
-      WFinder w_muon(muon_fs,  e_muCuts, PID::MUON, 35*GeV, 100*GeV, 30*GeV, 0.1, WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY, WFinder::TRACK, WFinder::TRANSMASS);
-      declare(w_muon, "W_Muon");
-      /////////////////////// NEEDED???? ////////////////////////
+      declare(w_el, "W_Electron");
+
+
+      // Particle-level W (with muon decay)
+      WFinder w_mu(fs, e_muCuts, PID::MUON, 35*GeV, 8000*GeV, 30*GeV, 0.1,
+		     WFinder::PROMPTCHLEPTONS, WFinder::CLUSTERNODECAY,
+		     WFinder::TRACK, WFinder::TRANSMASS);
+      declare(w_mu, "W_Muon");
       
       
       //the selected lepton (with it's photons) is not to be included in jet clustering
@@ -156,7 +165,7 @@ namespace Rivet {
       //ignore:
       //      if (Analysis.isCompatible(1)) {cout << "compatible!"; RET;}
       BEGIN;
-      N1;
+      N9;
 
      
       // count events and perform fast veto if not a single top event
@@ -174,11 +183,10 @@ namespace Rivet {
 
       
       // Find leptons, partonic tops, missing energy and jets in event
-      const Particles& electrons = apply<DressedLeptons>(event, "DressedElectrons").particlesByPt();      const Particles& muons = apply<DressedLeptons>(event, "DressedMuons").particlesByPt();
-      const WFinder& wFinder_el = apply<WFinder>(event, "W_Electron");
-      const WFinder& wFinder_mu = apply<WFinder>(event, "W_Muon");
-      const Particles WEl= wFinder_el.bosons();
-      const Particles WMu= wFinder_mu.bosons();
+      const Particles& electrons = apply<DressedLeptons>(event, "DressedElectrons").particlesByPt();
+      const Particles& muons = apply<DressedLeptons>(event, "DressedMuons").particlesByPt();
+      const WFinder& w_el = apply<WFinder>(event, "W_Electron");
+      const WFinder& w_mu = apply<WFinder>(event, "W_Muon");
       const Particles leptonicTops = apply<ParticleFinder>(event, "LeptonicTops").particlesByPt();
       const Particles hadTops = apply<ParticleFinder>(event, "HadTops").particlesByPt();
       const MissingMomentum misMom = apply<MissingMomentum>(event, "MET");
@@ -222,7 +230,7 @@ namespace Rivet {
       cout << "sizeOfJetsPostFilter=" << jets.size(); RET;
       
       // find b-jets
-      Jet bJet;
+      FourMomentum bJet;
       int bJetsFound = 0;
       for (const Jet& j : jets){
 	//if (bJetFound == 2) {cout << "More than one analysis level b-jet";RET;break;}
@@ -233,7 +241,7 @@ namespace Rivet {
 	  bJet = j;
 	}
       }
-      cout << "Number of b-jets:" << bJetsFound;
+      cout << "Number of b-jets:" << bJetsFound;RET;
     
       bool jetSelection = false;
       if ( jets.size() == 2 && bJetsFound == 1 ) {
@@ -268,6 +276,7 @@ namespace Rivet {
       if ( leptons.size() == 1 ){
 	leptonSelection = true;
       }
+      
 
       
       // discared event if selected jets and single lepton are not isolated
@@ -293,15 +302,144 @@ namespace Rivet {
 	  massljSelection = true;
 	}
       }
+
+
+      // construct pseudo-W
+
+      // TODO: what if more than one W reconstructed?!
       
-	// count events in fiducial phase space
-      if ( jetSelection && metSelection && leptonSelection && massljSelection && !jl_tooClose ){
-	_c_N_fid->fill(event.weight());
-	if ( leptons[0].charge() > 0 ) _c_N_fid_tq->fill(    event.weight() );
-	if ( leptons[0].charge() < 0 ) _c_N_fid_tbarq->fill( event.weight() ); 
+      FourMomentum w4p;
+      bool WbosonFound = false;
+     
+            
+      if ( w_el.bosons().size() != 0 ){
+	WbosonFound = true;
+	const Particles W_el= w_el.bosons();
+
+	//debug info /// START /////////////////////////////////////
+	cout << "w_el.bosons().size()=" << w_el.bosons().size(); RET;
+	cout << "W_el.size()=" << W_el.size() << ", " ;
+	cout << "W_el.constituentLepton().pid()=" << w_el.constituentLepton().pid() << ", ";
+	//debug info /// END ////////////////////////////////////////
+
+	w4p = W_el[0];
+	cout <<"W reconstructed from electron (naming it w4p)!" << endl;
+	cout << "w4p.pT=" << w4p.pT() << endl;
+	cout << "w4p.absrap=" << w4p.absrap() << endl;
+	
       }
+
+      if ( w_mu.bosons().size() != 0 ){
+	if ( WbosonFound ) {N8;RET;vetoEvent;} // not sure which W to use in pseudo-top definition
+	else WbosonFound = true;
+	const Particles W_mu= w_mu.bosons();
+
+	//debug info /// START /////////////////////////////////////
+	cout << "w_mu.bosons().size()=" << w_mu.bosons().size(); RET;
+	cout << "W_mu.size()=" << W_mu.size() << ", " ;
+	cout << "W_mu.constituentLepton().pid()=" << w_mu.constituentLepton().pid() << ", ";
+	//debug info /// END ////////////////////////////////////////
+
+	w4p = W_mu[0];
+	cout <<"W reconstructed from muon (naming it w4p)!" << endl;
+	cout << "w4p.pT=" << w4p.pT() << endl;
+	cout << "w4p.absrap=" << w4p.absrap() << endl;
+	
+      }
+	/*
+          
+      if ( W_el.size() + W_mu.size() == 1){
+	if (W_el.size() == 1 ) {
+	  cout << "W_el[0].pT=" << W_el[0].pt() << endl;
+	  cout << "W_el[0].absrap=" << W_el[0].absrap() << endl;
+	  cout << "W_el[0].E=" << W_el[0].E() << endl;
+	  cout << "W_el[0].px=" << W_el[0].px() << endl;
+	  cout << "W_el[0].py=" << W_el[0].py() << endl;
+	  cout << "W_el[0].pz=" << W_el[0].pz() << endl;
+	}
+	else if ( W_mu.size() == 1 ) {
+	  cout << "W_mu[0].pT=" << W_mu[0].pt() << endl;
+	  cout << "W_mu[0].absrap=" << W_mu[0].absrap() << endl;
+	  
+	  w4p = W_mu[0] ;
+	  cout <<"W reconstructed from muon (naming it w4p)!" << endl;
+	  cout << "w4p.pT=" << w4p.pT() << endl;
+	  cout << "w4p.absrap=" << w4p.absrap() << endl;	  
+	}
+	else {
+	  cout << "W_el.size()=" << W_el.size() << " " <<  "W_mu.size()=" << W_mu.size() << " " << endl; 
+	}
+      }
+      */
+
+    
+      // construct pseudo-top
+      bool pseudoTopFound = false;
+      FourMomentum pseudoTop4p;
+      
+      if ( bJetsFound == 1 && WbosonFound )
+	{
+	  pseudoTop4p = add(bJet, w4p);
+	  pseudoTopFound = true;
+	  cout << "pseudoTop4p.pT()=" << pseudoTop4p.pT(); RET;
+	  cout << "pseudoTop4p.absrap()=" << pseudoTop4p.absrap(); RET;
+	}
       
       
+      // debug
+      bool makesSelection = false;
+      if ( jetSelection && leptonSelection && massljSelection && !jl_tooClose ){
+	makesSelection = true;
+      } 
+
+      if (makesSelection && !WbosonFound && !pseudoTopFound){
+	N1;RET;//?
+	if ( metSelection ) {N5;RET;} else {N6;RET;}
+      }
+      else if ( makesSelection && WbosonFound && !pseudoTopFound){
+	N2;RET; //b-jet finding strangenes (finds W presumably from top but not the bjet)
+      }
+      else if ( makesSelection && !WbosonFound && pseudoTopFound){
+	N3;RET; //W finding strangeness strangenes (finds the bjet from a top but not the W)
+      }
+      else if ( makesSelection && WbosonFound && pseudoTopFound){
+	N4;RET;
+      }
+
+      
+
+      // for fiducial selections fill fid cross section counters and particle-level plots
+      if ( jetSelection && leptonSelection && massljSelection &&
+	   !jl_tooClose && WbosonFound && pseudoTopFound ){
+	
+	
+	_c_N_fid->fill(event.weight());
+
+		
+	if ( leptons[0].charge() > 0 ) { // top quark 
+
+	  _c_N_fid_tq->fill( event.weight() ); // counter for normalising hostograms
+	  
+	  _h_AbsPtclDiffXsecTPt->fill( pseudoTop4p.pT(),     event.weight() ); //(1,1,1)  
+	  _h_AbsPtclDiffXsecTY->fill(  pseudoTop4p.absrap(), event.weight() ); //(1,1,3)
+	  _h_NrmPtclDiffXsecTPt->fill( pseudoTop4p.pT(),     event.weight() ); //(2,1,1)
+	  _h_NrmPtclDiffXsecTY->fill(  pseudoTop4p.absrap(), event.weight() ); //(2,1,3)
+	  
+	}
+	
+	if ( leptons[0].charge() < 0 ) { // top antiquark
+	  
+	  _c_N_fid_tbarq->fill( event.weight() ); // counter for normalising hostograms
+	  
+	  _h_AbsPtclDiffXsecTbarPt->fill( pseudoTop4p.pT(),     event.weight() );  //(1,1,2)
+	  _h_AbsPtclDiffXsecTbarY->fill(  pseudoTop4p.absrap(), event.weight() );  //(1,1,4)
+	  _h_NrmPtclDiffXsecTbarPt->fill( pseudoTop4p.pT(),     event.weight() );  //(2,1,2)
+	  _h_NrmPtclDiffXsecTbarY->fill(  pseudoTop4p.absrap(), event.weight() );  //(2,1,4)
+	  
+	}
+	
+      }
+	
       
       /// Parton-level analysis  ///////////////////////////////////////////////
       
@@ -312,10 +450,10 @@ namespace Rivet {
 	if (leptonicTops[0].charge() > 0){
 	  
 	  
-	  cout << "add to plots: parton-level t with event weight: "
-	       << event.weight();RET;
+	  cout << "add to plots: parton-level t!";RET;
+
 	  
-	  _c_Xsec_fid_tq->fill(event.weight()) ;
+	  //	  _c_Xsec_fid_tq->fill(event.weight()) ;
 	  
 	  _h_AbsPrtnDiffXsecTPt->fill( leptonicTops[0].pT()    , event.weight()) ;
 	  _h_AbsPrtnDiffXsecTY->fill(  leptonicTops[0].absrap(), event.weight()) ;
@@ -327,10 +465,9 @@ namespace Rivet {
 	}
 	else {
 	  
-	  cout << "add to plots: parton-level t~ with event weight: "
-	       << event.weight();RET;
+	  cout << "add to plots: parton-level t~";RET;
 	  
-	  _c_Xsec_fid_tbarq->fill(event.weight()) ;
+	 	  //  _c_Xsec_fid_tbarq->fill(event.weight()) ;
 	  
 	  _h_AbsPrtnDiffXsecTbarPt->fill( leptonicTops[0].pT()    , event.weight()) ;
 	  _h_AbsPrtnDiffXsecTbarY->fill(  leptonicTops[0].absrap(), event.weight()) ;
@@ -339,115 +476,29 @@ namespace Rivet {
 	  _h_NrmPrtnDiffXsecTbarY->fill(  leptonicTops[0].absrap(), event.weight()) ;
 	  
 	}
-	
-	
       }
+
       
-      
-      //N3;RET;
-      vetoEvent;
-      /// Particle-level analysis ///////////////////////////////////////////////
-      
-      //      bool particleVeto = false;
-      
-      if (jets.size() != 2){N3;RET;vetoEvent;} //< debug mode!
-      //if (!bJetFound)      {N4;RET;vetoEvent;} //< debug mode!
-      //if (jets.size() != 2 || !bJetFound) vetoEvent;
-      
-      
-      
-      // Then this implies there must be 2 jets of which only one is
-      // b-tagged and there is exactly one isolated particle level
-      // electron or muon in the event.
-      //*************************************************************************
-      
-      
-      
-      
-      FourMomentum w4p;
-      //cout << "WEl.size()=" << WEl.size() << ", " ;
-      //cout << "WMu.size()=" << WMu.size() << " " ;
-      //cout << "WEl.constituentLepton().pid()=" << WEl.constituentLepton().pid();RET;
-      //cout << "WMu.constituentLepton().pid()=" << WMu.constituentLepton().pid();RET;
-      //cout << w_mu.constituentLepton().pid() ;
-      //if ( WEl.size() + WMu.size() != 1 ) WORRY;
-      
-      if ( WEl.size() + WMu.size() == 1){
-	if (WEl.size() == 1 ) {
-	  cout << "WEl[0].pT=" << WEl[0].pt() << endl;
-	  cout << "WEl[0].absrap=" << WEl[0].absrap() << endl;
-	  cout << "WEl[0].E=" << WEl[0].E() << endl;
-	  cout << "WEl[0].px=" << WEl[0].px() << endl;
-	  cout << "WEl[0].py=" << WEl[0].py() << endl;
-	  cout << "WEl[0].pz=" << WEl[0].pz() << endl;
-	  w4p = WEl[0];
-	  cout <<"W reconstructed from electron!" << endl;
-	  cout << "w4p.pT=" << w4p.pT() << endl;
-	  cout << "w4p.absrap=" << w4p.absrap() << endl;
+      // debug START /////////////////////////////////////////////
+      if ( WbosonFound ){
+	if ( makesSelection ){
+	  cout << "report finds W and makes selection!";
 	}
-	else if ( WMu.size() == 1 ) {
-	  cout << "WMu[0].pT=" << WMu[0].pt() << endl;
-	  cout << "WMu[0].absrap=" << WMu[0].absrap() << endl;
-	  
-	  w4p = WMu[0] ;
-	  cout <<"W reconstructed from muon!" << endl;
-	  cout << "w4p.pT=" << w4p.pT() << endl;
-	  cout << "w4p.absrap=" << w4p.absrap() << endl;	  
+	else {
+	  cout << "report finds W but fails selection!";
 	}
-	else {WORRY;
-	  cout << "WEl.size()=" << WEl.size() << " " <<  "WMu.size()=" << WMu.size() << " " << endl; 
-	}
-      } //else {N8;RET;vetoEvent;} //< means w-boson was not reconstructed
-      
-      /*
-      // define pseudoTop
-      const FourMomentum pseudoTop4p = add(bJet4p, w4p);
-      cout << "pseudoTop4p.pT()=" << pseudoTop4p.pT() << endl;
-      cout << "pseudoTop4p.absrap()=" << pseudoTop4p.absrap() << endl;
-      //      cout << "weight=" << event.weight() << endl;
-      
-      
-      bool flag = false;
-      if (leptons[0].charge() > 0){ // fill top quark diff xsecs
-	//N9; RET;//< debug mode!
-	flag = true;
-	cout << "top!"<<endl;
-	_c_fid_t->fill(event.weight()) ;
-	
-	_h_AbsPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
-	_h_AbsPtclDiffXsecTY->fill( pseudoTop4p.absrap(), event.weight()) ;
-	
-	_h_NrmPtclDiffXsecTPt->fill(pseudoTop4p.pT(),     event.weight()) ;
-	_h_NrmPtclDiffXsecTY->fill( pseudoTop4p.absrap(), event.weight()) ;
-	
-	
-	
-      } else {
-	flag = true;
-	N9;RET;//< debug mode!
-	cout << "anti-top!"<< endl;
-	_c_fid_tbar->fill(event.weight()) ;
-	
-	_h_AbsPtclDiffXsecTbarPt->fill(pseudoTop4p.pT()    , event.weight()) ;
-	_h_AbsPtclDiffXsecTbarY->fill( pseudoTop4p.absrap(), event.weight()) ;
-	
-	_h_NrmPtclDiffXsecTbarPt->fill(pseudoTop4p.pT(),     event.weight()) ;
-	_h_NrmPtclDiffXsecTbarY->fill( pseudoTop4p.absrap(), event.weight()) ;
-	
       }
-      
-      if (!flag){
-	//N1;
-	cout << "should have vetoed by now!"<< endl;
-	if (leptons.empty()) cout << "no leptons!" << endl;
-	
-	cout << "leptons[0].charge()=" << leptons[0].charge();
-	
-	
-	END;
-	}	
-      */
-	
+      else {
+	if ( makesSelection ){
+	  cout << "report doesn't find W but makes selection!";
+	  N8;RET;
+	}
+	else {
+	  cout << "report doesn't find W - doesn't makes selection!";
+	}
+      }
+      // debug end ///////////////////////////////////////////////
+
    
     }   //< end of analyze()            
     
