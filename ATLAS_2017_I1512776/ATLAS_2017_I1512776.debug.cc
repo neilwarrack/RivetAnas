@@ -114,12 +114,14 @@ namespace Rivet {
       //declare(PartonicTops(PartonicTops::TAU), "TauTops") ;
       
       // book counters
-      _c_N_tot =  bookCounter("mytest1");
+      _c_sumw_singleTop =  bookCounter("mytest1");
       _c_N_tot_tq =  bookCounter("mytest11");
       _c_N_tot_tbarq =  bookCounter("mytest111");
-      _c_N_fid =  bookCounter("mytest2");
-      _c_N_fid_tq =  bookCounter("mytest22");
-      _c_N_fid_tbarq =  bookCounter("mytest22");
+      _c_sumw_fid =  bookCounter("mytest2");
+      _c_sumw_fid_tq =  bookCounter("mytest22");
+      _c_sumw_fid_tbarq =  bookCounter("mytest22");
+      _c_sumw_prtn_tq =  bookCounter("sumw_parton_tq");
+      _c_sumw_prtn_tbarq =  bookCounter("sumw_parton_tbarq");
       _c_fid_t =    bookCounter("fiducialXSec_top");
       _c_fid_tbar = bookCounter("fiducialXSec_anti-top");
       _c_Xsec_fid_tq = bookCounter("Xsec_fir_tq");
@@ -155,8 +157,8 @@ namespace Rivet {
       
       // debug hepmc print-out
       _hepmcout.reset(new HepMC::IO_GenEvent("inspectevents.hepmc"));
-
     }
+    
 
 
     /// Perform the per-event analysis
@@ -165,19 +167,20 @@ namespace Rivet {
       //ignore:
       //      if (Analysis.isCompatible(1)) {cout << "compatible!"; RET;}
       BEGIN;
-      N9;
+      //N9;
 
      
       // count events and perform fast veto if not a single top event
       // (NB: do not give this analysis s-channel single top events as input!)
       const Particles allTops = apply<ParticleFinder>(event, "AllPartonicTops").particlesByPt();
       if ( allTops.size() == 1 ){
-	_c_N_tot->fill(event.weight());
+	_c_sumw_singleTop->fill(event.weight());
 	if ( allTops[0].charge() > 0 ) _c_N_tot_tq->fill(    event.weight() );
 	if ( allTops[0].charge() < 0 ) _c_N_tot_tbarq->fill( event.weight() );
       }
       else {
 	cout << "not a single top event! VETOING!!";RET;
+	N8; RET;
 	vetoEvent;
       }
 
@@ -198,31 +201,30 @@ namespace Rivet {
       cout << "weight: ";RET;
       cout << event.weight();RET;
       //      if ( event.weight() < 0.0) {N1;RET;} else {N2;RET;}
+
       if ( allTops.size() != 1){
 	cout << "WOW! partonicTops(ALL).size()=" << allTops.size(); RET;
       }
       else {
-	//cout << "one partonic top found";RET;N5;RET;
+	cout << "one partonic top found";RET;
       }
+      
       if (leptonicTops.size() == 1){
-	//cout << "single partonic top (e/mu) found";RET;N4;RET;
+	cout << "single partonic top (e/mu) found";RET;
       }
       else {
 	cout << "e/muTop.size() = " << leptonicTops.size();RET;
       }
       if (hadTops.size() == 1){
-	//      	cout << "single hadronic top found";RET;N6;RET;
+	cout << "single hadronic top found";RET;
       }
-      //      if (tauTops.size() == 1){
-      //cout << "single tau top found";RET;N7;RET;
-      // }
       // END debug info //////////////////////////////////////////////////
 
     
 
       
  
-      /// require exactly one b-jet and at least on other for particle level results
+      /// require exactly one b-jet and one other jet for particle level results
       // apply particle-level jet cuts
       Cut jetCuts = (Cuts::abseta < 4.5 && Cuts::pT > 30*GeV);
       cout << "sizeOfJetsPreFilter=" << jets.size(); RET;
@@ -233,30 +235,36 @@ namespace Rivet {
       FourMomentum bJet;
       int bJetsFound = 0;
       for (const Jet& j : jets){
+
 	//if (bJetFound == 2) {cout << "More than one analysis level b-jet";RET;break;}
+	
 	if ( j.bTagged()) { cout << "b-tagged jet found";RET;}
 	if ( j.bTagged(Cuts::pT > 5*GeV)) {cout << "b-tagged jet found with b>5GeV found";RET;}
 	if ( j.bTagged(Cuts::pT > 5*GeV) && j.abseta() < 2.5) {
+	  cout << "b-tagged jet found with b>5GeV inside eta<2.5";RET;
 	  bJetsFound++;
 	  bJet = j;
 	}
       }
-      cout << "Number of b-jets:" << bJetsFound;RET;
+      cout << "Total number of b-jets:" << bJetsFound;RET;
     
       bool jetSelection = false;
       if ( jets.size() == 2 && bJetsFound == 1 ) {
 	cout << "two jets found (exactly one of which is a b-jet)!"; RET;
 	jetSelection = true;
       }
+    if (!jetSelection) {cout << "jet selection failed";RET;}
+    else {cout << "jet selection passed";RET;}
 
-
+    
       // missing energy cut for parton and particle level analysis
       bool metSelection = false;
       if (misMom.met() < 30*GeV) {
-	cout << "met failure: met (GeV) = " << misMom.met(); RET;
+	cout << "metSelection failed (met (GeV) = " << misMom.met() << ")"; RET;
       }
       else {
 	metSelection = true;
+	cout << "metSelection pased (met (GeV) = " << misMom.met() << ")"; RET;
       }
 
 
@@ -266,9 +274,11 @@ namespace Rivet {
       Particles leptons;
       for (const Particle& e : electrons){
         leptons.push_back(e);
+	cout << "pushed back one electron to 'leptons' vector";RET;
       }
       for (const Particle& m : muons){
         leptons.push_back(m);
+	cout << "pushed back one muon to 'leptons' vector";RET;
       }
     
       bool leptonSelection = false;
@@ -276,18 +286,24 @@ namespace Rivet {
       if ( leptons.size() == 1 ){
 	leptonSelection = true;
       }
+      if (!leptonSelection) {cout << "lepton selection failed";RET;}
+      else {cout << "lepon selection passed";RET;}
       
 
       
       // discared event if selected jets and single lepton are not isolated
-      bool jl_tooClose= false;
-      if (leptonSelection){
-        for (const Jet& j : jets){
+      bool isolationSelection = false;
+      if (leptonSelection && jets.size() > 0){
+	bool jl_tooClose= false;
+	for (const Jet& j : jets){
 	  if (deltaR(j, leptons[0]) < 0.4) jl_tooClose = true ;
 	}
+	isolationSelection = jl_tooClose;
+	if ( jl_tooClose ) {cout << "isolation requirement failed!";RET;}
+	else {cout << "isolation requirement met!";RET;}
       }
-
-
+      
+      
       // calculate mass of lepton + b-jet system
       bool massljSelection = false;
       if (leptonSelection && jetSelection){ // guarantees exactly 1 lepton and exactly 1 bJet 
@@ -302,6 +318,8 @@ namespace Rivet {
 	  massljSelection = true;
 	}
       }
+      if (!massljSelection) {cout << "jet_lepton mass selection failed";RET;}
+      else {cout << "jet_lepton mass selection passed";RET;}
 
 
       // construct pseudo-W
@@ -313,6 +331,11 @@ namespace Rivet {
      
             
       if ( w_el.bosons().size() != 0 ){
+	if (w_el.bosons().size() != 1 ) {
+	  cout << "more than one electron W bosons found - veto";RET;
+	  N8;RET;vetoEvent;
+	}
+
 	WbosonFound = true;
 	const Particles W_el= w_el.bosons();
 
@@ -330,8 +353,17 @@ namespace Rivet {
       }
 
       if ( w_mu.bosons().size() != 0 ){
-	if ( WbosonFound ) {N8;RET;vetoEvent;} // not sure which W to use in pseudo-top definition
+	if ( WbosonFound ) { // not sure which W to use in pseudo-top definition
+	  cout << "single electron W bosons already found! Not sure which should be used - veto";RET;
+	  N8;RET;vetoEvent;
+	} 
 	else WbosonFound = true;
+
+	if (w_mu.bosons().size() != 1 ) {
+	  cout << "more than one muon W bosons found - veto";RET;
+	  N8;RET;vetoEvent;
+	}
+
 	const Particles W_mu= w_mu.bosons();
 
 	//debug info /// START /////////////////////////////////////
@@ -341,36 +373,10 @@ namespace Rivet {
 	//debug info /// END ////////////////////////////////////////
 
 	w4p = W_mu[0];
-	cout <<"W reconstructed from muon (naming it w4p)!" << endl;
+	cout << "W reconstructed from muon (naming it w4p)!" << endl;
 	cout << "w4p.pT=" << w4p.pT() << endl;
-	cout << "w4p.absrap=" << w4p.absrap() << endl;
-	
+	cout << "w4p.absrap=" << w4p.absrap() << endl;	
       }
-	/*
-          
-      if ( W_el.size() + W_mu.size() == 1){
-	if (W_el.size() == 1 ) {
-	  cout << "W_el[0].pT=" << W_el[0].pt() << endl;
-	  cout << "W_el[0].absrap=" << W_el[0].absrap() << endl;
-	  cout << "W_el[0].E=" << W_el[0].E() << endl;
-	  cout << "W_el[0].px=" << W_el[0].px() << endl;
-	  cout << "W_el[0].py=" << W_el[0].py() << endl;
-	  cout << "W_el[0].pz=" << W_el[0].pz() << endl;
-	}
-	else if ( W_mu.size() == 1 ) {
-	  cout << "W_mu[0].pT=" << W_mu[0].pt() << endl;
-	  cout << "W_mu[0].absrap=" << W_mu[0].absrap() << endl;
-	  
-	  w4p = W_mu[0] ;
-	  cout <<"W reconstructed from muon (naming it w4p)!" << endl;
-	  cout << "w4p.pT=" << w4p.pT() << endl;
-	  cout << "w4p.absrap=" << w4p.absrap() << endl;	  
-	}
-	else {
-	  cout << "W_el.size()=" << W_el.size() << " " <<  "W_mu.size()=" << W_mu.size() << " " << endl; 
-	}
-      }
-      */
 
     
       // construct pseudo-top
@@ -381,44 +387,62 @@ namespace Rivet {
 	{
 	  pseudoTop4p = add(bJet, w4p);
 	  pseudoTopFound = true;
+	  cout << "pseudo top created!";RET;
 	  cout << "pseudoTop4p.pT()=" << pseudoTop4p.pT(); RET;
 	  cout << "pseudoTop4p.absrap()=" << pseudoTop4p.absrap(); RET;
 	}
+      else {
+	cout << "failed to create pseudo top due to ";
+	if (WbosonFound && bJetsFound != 1){
+	  cout << "wrong number of b-jets (" << bJetsFound << ") despite W being reconstructed from a lepton and met";RET;
+	}
+	else if (!WbosonFound && bJetsFound ==1){
+	  cout << "correct number of b-jets (" << bJetsFound << ") but no W reconstructed"; RET;
+	}
+	else if (!WbosonFound && bJetsFound != 1){
+	  cout << "wrong number of b-jets (" << bJetsFound << ") and no W reconstructed"; RET;
+	} else {
+	  cout << "you screwed up - veto";RET;N8;RET; vetoEvent;
+	}
+      }
+    
       
-      
-      // debug
       bool makesSelection = false;
-      if ( jetSelection && leptonSelection && massljSelection && !jl_tooClose ){
+      if ( jetSelection && leptonSelection && massljSelection && isolationSelection ){
 	makesSelection = true;
-      } 
+      }
+      else { cout << "selection criteria failed";RET;N1;RET;}
 
+      
       if (makesSelection && !WbosonFound && !pseudoTopFound){
-	N1;RET;//?
-	if ( metSelection ) {N5;RET;} else {N6;RET;}
+	if ( metSelection ) {N2;RET;} else {N3;RET;}
       }
-      else if ( makesSelection && WbosonFound && !pseudoTopFound){
-	N2;RET; //b-jet finding strangenes (finds W presumably from top but not the bjet)
+      
+      if ( makesSelection && WbosonFound && !pseudoTopFound){
+	N4;RET; //b-jet finding strangenes (finds W presumably from top but not the bjet)
       }
-      else if ( makesSelection && !WbosonFound && pseudoTopFound){
-	N3;RET; //W finding strangeness strangenes (finds the bjet from a top but not the W)
+
+      if ( makesSelection && !WbosonFound && pseudoTopFound){
+	N5;RET; //W finding strangeness strangenes (finds the bjet from a top but not the W)
       }
-      else if ( makesSelection && WbosonFound && pseudoTopFound){
-	N4;RET;
-      }
+      
 
       
 
       // for fiducial selections fill fid cross section counters and particle-level plots
       if ( jetSelection && leptonSelection && massljSelection &&
-	   !jl_tooClose && WbosonFound && pseudoTopFound ){
-	
-	
-	_c_N_fid->fill(event.weight());
+	   isolationSelection && WbosonFound && pseudoTopFound ){
 
-		
+	
+
+	_c_sumw_fid->fill(event.weight());
+	
 	if ( leptons[0].charge() > 0 ) { // top quark 
 
-	  _c_N_fid_tq->fill( event.weight() ); // counter for normalising hostograms
+	  N6;RET;  	  
+
+	  _c_sumw_fid_tq->fill( event.weight() ); // counter for normalising hostograms
+	  _c_Xsec_fid_tq->fill(event.weight()) ;
 	  
 	  _h_AbsPtclDiffXsecTPt->fill( pseudoTop4p.pT(),     event.weight() ); //(1,1,1)  
 	  _h_AbsPtclDiffXsecTY->fill(  pseudoTop4p.absrap(), event.weight() ); //(1,1,3)
@@ -427,20 +451,25 @@ namespace Rivet {
 	  
 	}
 	
-	if ( leptons[0].charge() < 0 ) { // top antiquark
+	else if ( leptons[0].charge() < 0 ) { // top antiquark
+
+	  N7;RET;
 	  
-	  _c_N_fid_tbarq->fill( event.weight() ); // counter for normalising hostograms
+	  _c_sumw_fid_tbarq->fill( event.weight() ); // counter for normalising hostograms
+	  _c_Xsec_fid_tbarq->fill(event.weight()) ;
 	  
 	  _h_AbsPtclDiffXsecTbarPt->fill( pseudoTop4p.pT(),     event.weight() );  //(1,1,2)
 	  _h_AbsPtclDiffXsecTbarY->fill(  pseudoTop4p.absrap(), event.weight() );  //(1,1,4)
 	  _h_NrmPtclDiffXsecTbarPt->fill( pseudoTop4p.pT(),     event.weight() );  //(2,1,2)
 	  _h_NrmPtclDiffXsecTbarY->fill(  pseudoTop4p.absrap(), event.weight() );  //(2,1,4)
 	  
-	}
-	
-      }
-	
+	} else {cout << "well what is it now!?";RET;N8;RET;}
       
+      }
+      	
+
+
+
       /// Parton-level analysis  ///////////////////////////////////////////////
       
       
@@ -448,27 +477,24 @@ namespace Rivet {
 	
 	
 	if (leptonicTops[0].charge() > 0){
-	  
-	  
-	  cout << "add to plots: parton-level t!";RET;
 
-	  
-	  //	  _c_Xsec_fid_tq->fill(event.weight()) ;
-	  
+	  _c_sumw_prtn_tq->fill( event.weight() );
+
+	  cout << "add to plots: parton-level t!";RET;	  
+	  	  
 	  _h_AbsPrtnDiffXsecTPt->fill( leptonicTops[0].pT()    , event.weight()) ;
 	  _h_AbsPrtnDiffXsecTY->fill(  leptonicTops[0].absrap(), event.weight()) ;
 	  
 	  _h_NrmPrtnDiffXsecTPt->fill( leptonicTops[0].pT(),     event.weight()) ;
 	  _h_NrmPrtnDiffXsecTY->fill(  leptonicTops[0].absrap(), event.weight()) ;
-	  
-	  
+	  	  
 	}
 	else {
+
+	  _c_sumw_prtn_tbarq->fill( event.weight() );
 	  
 	  cout << "add to plots: parton-level t~";RET;
-	  
-	 	  //  _c_Xsec_fid_tbarq->fill(event.weight()) ;
-	  
+	  	  
 	  _h_AbsPrtnDiffXsecTbarPt->fill( leptonicTops[0].pT()    , event.weight()) ;
 	  _h_AbsPrtnDiffXsecTbarY->fill(  leptonicTops[0].absrap(), event.weight()) ;
 	  
@@ -478,87 +504,89 @@ namespace Rivet {
 	}
       }
 
+
       
       // debug START /////////////////////////////////////////////
       if ( WbosonFound ){
 	if ( makesSelection ){
-	  cout << "report finds W and makes selection!";
+	  cout << "report: finds W and makes selection!";RET;
 	}
 	else {
-	  cout << "report finds W but fails selection!";
+	  cout << "report: finds W but fails selection!";RET;
 	}
       }
       else {
 	if ( makesSelection ){
-	  cout << "report doesn't find W but makes selection!";
-	  N8;RET;
+	  cout << "report: doesn't find W but makes selection!";RET;
 	}
 	else {
-	  cout << "report doesn't find W - doesn't makes selection!";
+	  cout << "report: doesn't find W - doesn't makes selection!";RET;
 	}
       }
       // debug end ///////////////////////////////////////////////
 
-   
-    }   //< end of analyze()            
+      RET;
+    } 
     
     
-
-
     /// Normalise histograms etc., after the run
     void finalize() {
-      cout << "BEGIN FINALIZE"; RET;
+    
+      RET;RET;
       /// compute cross sections
       // tq+tbarq inclusive
-      double Xsec_tqtbarq = crossSection()*_c_N_tot->val()/sumOfWeights();
+      double Xsec_tqtbarq = crossSection()*_c_sumw_singleTop->val()/sumOfWeights();
       //info:
       cout << "crossSection()=" << crossSection();RET;
-      cout << "_c_N_tot->val()=" << _c_N_tot->val();RET;
+      cout << "_c_sumw_singleTop->val()=" << _c_sumw_singleTop->val();RET;
       cout << "sumOfWeights()=" << sumOfWeights();RET;
       cout << "Xsec_tqtbarq=" << Xsec_tqtbarq;RET;
-      
-      // tq inclusive
-      scale( _c_N_tot_tq, Xsec_tqtbarq/_c_N_tot->val() );
-      //info:
-      cout << "_c_N_tot_tq->val()=" << _c_N_tot_tq->val();RET;
-    
-      // tbarq inclusive
-      scale( _c_N_tot_tbarq, Xsec_tqtbarq/_c_N_tot->val() );
-      //info:
-      cout << "_c_N_tot_tbarq->val()=" << _c_N_tot_tbarq->val();RET;
-          
-      
-      //normalize(_h_YYYY); // normalize to unity                                                   
-      //scale(_h_ZZZZ, crossSection()/picobarn/sumOfWeights()); // norm to cross section 
 
-      double SFfbGeV = crossSection()/GeV/femtobarn/sumOfWeights();
-      double SFfb = crossSection()/femtobarn/sumOfWeights();
-      double SFpb = crossSection()/picobarn/sumOfWeights();
-      double Norm_pT = 1/picobarn/sumOfWeights();
-      double Norm_Y = 1/picobarn/sumOfWeights()/1000;
       
-      scale(_c_fid_t, SFpb);
-      scale(_c_fid_tbar, SFpb);
-      scale(_c_Xsec_fid_tq, crossSection()/sumOfWeights() );
-      scale(_c_Xsec_fid_tbarq, crossSection()/sumOfWeights() );
+      // tq particle-level (fiducial)
+      double Xsec_fid_tq = Xsec_tqtbarq*(_c_Xsec_fid_tq->val()/_c_sumw_singleTop->val() );
+      cout << "Xsec_fid_tq=" << Xsec_fid_tq;RET;
+      scale( _h_AbsPtclDiffXsecTPt, Xsec_fid_tq / _c_Xsec_fid_tq->val() );
+      scale( _h_AbsPtclDiffXsecTY,  Xsec_fid_tq / _c_Xsec_fid_tq->val() );
+      scale( _h_NrmPtclDiffXsecTPt, 1000 / _c_Xsec_fid_tq->val() );
+      scale( _h_NrmPtclDiffXsecTY,  1000 / _c_Xsec_fid_tq->val() );
      
-      // Abs cross Sections (normalized to cross section)
-      scale(_h_AbsPrtnDiffXsecTPt,       _c_Xsec_fid_tq->val()/sumOfWeights() );
-      scale(_h_AbsPrtnDiffXsecTbarPt, _c_Xsec_fid_tbarq->val()/sumOfWeights() );
-
-      scale(_h_AbsPrtnDiffXsecTY,       _c_Xsec_fid_tq->val()/sumOfWeights() );
-      scale(_h_AbsPrtnDiffXsecTbarY, _c_Xsec_fid_tbarq->val()/sumOfWeights() );
-
-      // Nrm cross Sections (normalized to 1)
-      scale(_h_NrmPrtnDiffXsecTPt,       1/sumOfWeights() );
-      scale(_h_NrmPrtnDiffXsecTbarPt,    1/sumOfWeights() );
+          
+      // tbarq particl-level (fiducial)
+      double Xsec_fid_tbarq = Xsec_tqtbarq*(_c_Xsec_fid_tbarq->val()/_c_sumw_singleTop->val() );
+      cout << "Xsec_fid_tbarq=" << Xsec_fid_tbarq;RET;
+      scale( _h_AbsPtclDiffXsecTPt, Xsec_fid_tbarq / _c_Xsec_fid_tbarq->val() );
+      scale( _h_AbsPtclDiffXsecTY,  Xsec_fid_tbarq / _c_Xsec_fid_tbarq->val() );
+      scale( _h_NrmPtclDiffXsecTPt, 1000 / _c_Xsec_fid_tbarq->val() );
+      scale( _h_NrmPtclDiffXsecTY,  1000 / _c_Xsec_fid_tbarq->val() );
       
-      scale(_h_NrmPrtnDiffXsecTY,    0.001/sumOfWeights() );
-      scale(_h_NrmPrtnDiffXsecTbarY, 0.001/sumOfWeights() );      
-    
 
-      // end of anaysis!
 
+      // tq parton-level
+      double Xsec_prtn_tq = Xsec_tqtbarq*(_c_sumw_prtn_tq->val()/_c_sumw_singleTop->val() );
+      cout << "Xsec_prtn_tq=" << Xsec_prtn_tq;RET;
+      cout << "_c_sumw_prtn_tq->val()=" << _c_sumw_prtn_tq->val();RET;
+      cout << "Number of events with a leptonically decaying top quark (parton-level):"
+	   << _c_sumw_prtn_tq->numEntries();RET;
+      scale(_h_AbsPrtnDiffXsecTPt, Xsec_prtn_tq / _c_sumw_prtn_tq->val() );
+      scale(_h_AbsPrtnDiffXsecTY,  Xsec_prtn_tq / _c_sumw_prtn_tq->val() );
+      scale(_h_NrmPrtnDiffXsecTPt, 1000 / _c_sumw_prtn_tq->val() );
+      scale(_h_NrmPrtnDiffXsecTY,  1000 / _c_sumw_prtn_tq->val() );
+
+
+      // tbarq parton-level
+      double Xsec_prtn_tbarq = Xsec_tqtbarq*(_c_sumw_prtn_tbarq->val()/_c_sumw_singleTop->val() );
+      cout << "Xsec_prtn_tbarq=" << Xsec_prtn_tbarq;RET;
+      cout << "_c_sumw_prtn_tbarq->val()=" << _c_sumw_prtn_tbarq->val();RET;
+      cout << "Number of events with a leptonically decaying top ANTIquark (parton-level):"
+	   << _c_sumw_prtn_tbarq->numEntries();RET;
+      scale(_h_AbsPrtnDiffXsecTbarPt, Xsec_prtn_tbarq / _c_sumw_prtn_tbarq->val() );
+      scale(_h_AbsPrtnDiffXsecTbarY,  Xsec_prtn_tbarq / _c_sumw_prtn_tbarq->val() );
+      scale(_h_NrmPrtnDiffXsecTbarPt, Xsec_prtn_tbarq / _c_sumw_prtn_tbarq->val() );
+      scale(_h_NrmPrtnDiffXsecTbarY,  Xsec_prtn_tbarq / _c_sumw_prtn_tbarq->val() );
+ 
+      
+      
       
       // Print info (just for me)
       ////////////////////////////////////////////////////
@@ -568,10 +596,10 @@ namespace Rivet {
       //cout << "femtobarn = " << femtobarn;RET;
       cout << "sum of weights = " << sumOfWeights(); RET;
       cout << "cross section = " << crossSection(); RET;
-      cout << "_c_Xsec_fid_tq = " << _c_Xsec_fid_tq->val(); RET;
-      cout << "_c_Xsec_fid_tbarq = " << _c_Xsec_fid_tbarq->val(); RET;
+      //      cout << "_c_Xsec_fid_tq = " << _c_Xsec_fid_tq->val(); RET;
+      //cout << "_c_Xsec_fid_tbarq = " << _c_Xsec_fid_tbarq->val(); RET;
       /////////////////////////////////////////////////////
-      RET;
+      RET;RET;
            
     }
     
@@ -581,7 +609,7 @@ namespace Rivet {
     /// @name Histograms
     //@{
     
-    CounterPtr _c_fid_t, _c_fid_tbar, _c_Xsec_fid_tq, _c_Xsec_fid_tbarq, _c_N_tot, _c_N_fid, _c_N_fid_tq, _c_N_fid_tbarq, _c_N_tot_tq, _c_N_tot_tbarq;
+    CounterPtr _c_fid_t, _c_fid_tbar, _c_Xsec_fid_tq, _c_Xsec_fid_tbarq, _c_sumw_singleTop, _c_sumw_fid, _c_sumw_fid_tq, _c_sumw_fid_tbarq, _c_sumw_prtn_tq, _c_sumw_prtn_tbarq, _c_N_tot_tq, _c_N_tot_tbarq;
     Histo1DPtr _h_AbsPtclDiffXsecTPt, _h_AbsPtclDiffXsecTY, _h_NrmPtclDiffXsecTPt, _h_NrmPtclDiffXsecTY, _h_AbsPtclDiffXsecTbarPt, _h_AbsPtclDiffXsecTbarY, _h_NrmPtclDiffXsecTbarPt,  _h_NrmPtclDiffXsecTbarY, _h_AbsPrtnDiffXsecTPt, _h_AbsPrtnDiffXsecTY, _h_NrmPrtnDiffXsecTPt, _h_NrmPrtnDiffXsecTY, _h_AbsPrtnDiffXsecTbarPt, _h_AbsPrtnDiffXsecTbarY, _h_NrmPrtnDiffXsecTbarPt, _h_NrmPrtnDiffXsecTbarY;
     
     //@}
