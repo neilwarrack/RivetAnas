@@ -351,47 +351,43 @@ namespace Rivet {
 
       /// compute cross sections
 
-      int nrm = 1000; // this is a corrective factor for a yet to be corrected
-                      // mistake in the reference yoda file for ALL the normalised
-                      // differential cross sections.
-
       
       // tq particle-level (fiducial)
       scale( _h_AbsPtclDiffXsecTPt, crossSection()/femtobarn/sumOfWeights() );
       scale( _h_AbsPtclDiffXsecTY,  crossSection()/sumOfWeights() );
-      scale( _h_NrmPtclDiffXsecTPt, nrm / _c_Xsec_fid_tq->val() );
-      scale( _h_NrmPtclDiffXsecTY,  nrm / _c_Xsec_fid_tq->val() );
+      scale( _h_NrmPtclDiffXsecTPt, 1 / _c_Xsec_fid_tq->val() );
+      scale( _h_NrmPtclDiffXsecTY,  1 / _c_Xsec_fid_tq->val() );
 
       scale( _h_AbsPtclDiffXsecTjPt, crossSection()/femtobarn/sumOfWeights() );
       scale( _h_AbsPtclDiffXsecTjY,  crossSection()/sumOfWeights() );
-      scale( _h_NrmPtclDiffXsecTjPt, nrm / _c_Xsec_fid_tq->val() );
-      scale( _h_NrmPtclDiffXsecTjY,  nrm / _c_Xsec_fid_tq->val() );
+      scale( _h_NrmPtclDiffXsecTjPt, 1 / _c_Xsec_fid_tq->val() );
+      scale( _h_NrmPtclDiffXsecTjY,  1 / _c_Xsec_fid_tq->val() );
             
           
       // tbarq particl-level (fiducial)
       scale( _h_AbsPtclDiffXsecTbarPt, crossSection()/femtobarn/sumOfWeights() );
       scale( _h_AbsPtclDiffXsecTbarY,  crossSection() / sumOfWeights() );
-      scale( _h_NrmPtclDiffXsecTbarPt, nrm / _c_Xsec_fid_tbarq->val() );
-      scale( _h_NrmPtclDiffXsecTbarY,  nrm / _c_Xsec_fid_tbarq->val() );
+      scale( _h_NrmPtclDiffXsecTbarPt, 1 / _c_Xsec_fid_tbarq->val() );
+      scale( _h_NrmPtclDiffXsecTbarY,  1 / _c_Xsec_fid_tbarq->val() );
 
       scale( _h_AbsPtclDiffXsecTbarjPt, crossSection()/femtobarn/sumOfWeights() );
       scale( _h_AbsPtclDiffXsecTbarjY,  crossSection() / sumOfWeights() );
-      scale( _h_NrmPtclDiffXsecTbarjPt, nrm / _c_Xsec_fid_tbarq->val() );
-      scale( _h_NrmPtclDiffXsecTbarjY,  nrm / _c_Xsec_fid_tbarq->val() );
+      scale( _h_NrmPtclDiffXsecTbarjPt, 1 / _c_Xsec_fid_tbarq->val() );
+      scale( _h_NrmPtclDiffXsecTbarjY,  1 / _c_Xsec_fid_tbarq->val() );
 
 
       // tq parton-level
       scale(_h_AbsPrtnDiffXsecTPt, crossSection()/femtobarn/sumOfWeights() );
       scale(_h_AbsPrtnDiffXsecTY,  crossSection() / sumOfWeights() );
-      scale(_h_NrmPrtnDiffXsecTPt, nrm / _c_sumw_prtn_tq->val() );
-      scale(_h_NrmPrtnDiffXsecTY,  nrm / _c_sumw_prtn_tq->val() );
+      scale(_h_NrmPrtnDiffXsecTPt, 1 / _c_sumw_prtn_tq->val() );
+      scale(_h_NrmPrtnDiffXsecTY,  1 / _c_sumw_prtn_tq->val() );
 
 
       // tbarq parton-level
       scale(_h_AbsPrtnDiffXsecTbarPt, crossSection()/femtobarn/sumOfWeights() );
       scale(_h_AbsPrtnDiffXsecTbarY,  crossSection() / sumOfWeights() );
-      scale(_h_NrmPrtnDiffXsecTbarPt, nrm / _c_sumw_prtn_tbarq->val() );
-      scale(_h_NrmPrtnDiffXsecTbarY,  nrm / _c_sumw_prtn_tbarq->val() );
+      scale(_h_NrmPrtnDiffXsecTbarPt, 1 / _c_sumw_prtn_tbarq->val() );
+      scale(_h_NrmPrtnDiffXsecTbarY,  1 / _c_sumw_prtn_tbarq->val() );
  
       
       
