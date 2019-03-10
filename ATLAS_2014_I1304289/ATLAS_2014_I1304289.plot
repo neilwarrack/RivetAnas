@@ -13,6 +13,8 @@ YLabel=$\frac{1}{\sigma}\frac{d\sigma}{dm_{t\bar{t}}}$ $\text{[TeV}^{-1}\text{]}
 
 # BEGIN PLOT /ATLAS_2014_I1304289/d03-x01-y01
 Title=$t\bar{t}$ system transverse momentum
+Legends=0
+#CustomLegend=funky
 XLabel=$p_T^{t\bar{t}}$ [GeV]
 YLabel=$\frac{1}{\sigma}\frac{d\sigma}{dp_T^{t\bar{t}}}$ $\text{[TeV}^{-1}\text{]}$
 # END PLOT
