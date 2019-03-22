@@ -74,7 +74,8 @@ namespace Rivet {
 	&& (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON);
       PromptFinalState bareLeptons(lep_cuts,true,true); // true,true accepts tau and
                                                         // muon decays respectively
-      IdentifiedFinalState photons(Cuts::abseta < 2.6 && Cuts::abspid == PID::PHOTON);                   DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
+      IdentifiedFinalState photons(Cuts::abseta < 2.6 && Cuts::abspid == PID::PHOTON);
+      DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
       declare(dressedLeptons, "Leptons");
 
       // Jets
@@ -90,7 +91,8 @@ namespace Rivet {
 
       //vfs.addVetoOnThisFinalState(dressedLeps);
       
-      declare(MissingMomentum(FinalState(Cuts::abseta < 4.5)), "MET");
+      //      declare(MissingMomentum(FinalState(Cuts::abseta < 4.5)), "MET");
+      declare(MissingMomentum(FinalState()), "MET");
 
 
       // Book histograms and counters
@@ -134,7 +136,7 @@ namespace Rivet {
       do { // trick to allow early exit from selection without full return
 
 	//const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
-	const Particles& allTops = apply<PartonicTops>(event, "LeptonicTops").particles();
+	const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
         if (allTops.size() != 1) break;
         const Particle& top = allTops[0];
 
@@ -193,8 +195,20 @@ namespace Rivet {
 
         // Pseudo-W and pseudo-top
         const MissingMomentum& mm = apply<MissingMomentum>(event, "MET");
-        const FourMomentum pW = lep.mom() + mm.missingMom();
-        const FourMomentum pTop = pW + bjet.mom();
+
+	Vector3 pt3Mis = mm.vectorPt();
+	FourMomentum pLep = lep.mom();
+
+	FourMomentum pNu = recoNu(pt3Mis, pLep);
+
+	const FourMomentum pW = pLep + pNu;
+	const FourMomentum pTop = pW + bjet.mom();
+
+
+        //const FourMomentum pW = lep.mom() + mm.missingMom();
+	//	const FourMomentum pW = lep.mom() + mm.missingMom();
+	//const FourMomentum pW = lep.mom() + WBoson;
+        
 
         // Fill counters and histograms
         size_t itop = (lep.charge() > 0) ? 0 : 1;
@@ -209,6 +223,11 @@ namespace Rivet {
 	
       } while (false); //< just one iteration
 
+
+      
+
+
+
     }
 
 
@@ -217,7 +236,7 @@ namespace Rivet {
 
       // branching ratio of W->lepton
       double lepBR = 0.324;
-
+      
       scale( _h_AbsPtclDiffXsecTPt, crossSection()/femtobarn/sumOfWeights() / lepBR );
       scale( _h_AbsPtclDiffXsecTY,  crossSection()/sumOfWeights() / lepBR );
       normalize(_h_NrmPtclDiffXsecTPt);
@@ -236,11 +255,68 @@ namespace Rivet {
       for (int i = 0; i < 9; i++) {
         cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
       }
-
+    
 
     }
 
     //@}
+
+
+
+    FourMomentum recoNu(Vector3& neutrino, FourMomentum& lepton) {
+      float wMass = 80.399*GeV; // in GeV
+      FourMomentum return_neutrino;
+      vector<float> pZ = getNeutrinoPzSolutions(neutrino, lepton, wMass);
+      int nSolutions = pZ.size();
+      if(nSolutions == 2) {
+        neutrino.setZ( std::fabs(pZ[0]) < std::fabs(pZ[1]) ? pZ[0] : pZ[1] );
+      } else if(nSolutions == 0) {
+        float mTSq = 2. * (neutrino.mod()*lepton.pT()
+			   - neutrino.x()*lepton.x()
+			   - neutrino.y()*lepton.y());
+        // neutrino.SetPerp( wMass*wMass/mTSq*neutrino.Pt() );
+        neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
+        neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
+      } else if(nSolutions == 1) {
+        neutrino.setZ(pZ[0]);
+      } else {
+        std::cout << "(ERROR)\tKinematics::reconstuctNeutrino():\tImpossible number of pZ solutions: " << nSolutions << ". Setting to NAN." << std::endl;
+        neutrino.setZ(NAN);
+	cutflow[8]++;
+      }
+      return_neutrino.setPM(neutrino.x(), neutrino.y(), neutrino.z(), 0.0);
+      return return_neutrino;
+    }
+      
+
+    vector<float> getNeutrinoPzSolutions(Vector3 & neutrino, FourMomentum& lepton, float wMass) {
+      vector<float> pz;
+      
+      float alpha = 0.5 * wMass * wMass + lepton.x() * neutrino.x() + lepton.y() * neutrino.y();
+      float pT_lep2 = lepton.perp2();
+      float discriminant = lepton.vector3().mod2() * (alpha * alpha - pT_lep2 * neutrino.mod2());
+      if (discriminant < 0.)
+	return pz;
+      
+      float pz_offset = alpha * lepton.z() / pT_lep2;
+      
+      float squareRoot = sqrt(discriminant);
+      if(squareRoot / pT_lep2 < 1.e-6)
+	pz.push_back(pz_offset);
+      else {
+	if(pz_offset > 0) {
+	  pz.push_back(pz_offset - squareRoot / pT_lep2);
+	  pz.push_back(pz_offset + squareRoot / pT_lep2);
+	} else {
+	  pz.push_back(pz_offset + squareRoot / pT_lep2);
+	  pz.push_back(pz_offset - squareRoot / pT_lep2);
+	}
+      }
+      
+      return pz;
+    }
+    
+
 
 
     /// @name Histograms
