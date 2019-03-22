@@ -38,7 +38,7 @@ namespace Rivet {
       
       // Particle-level lepton cuts
       Cut e_muCuts = Cuts::abseta < 2.5 && Cuts::pT > 20*GeV ;
-      Cut lep_veto_cuts = Cuts::abseta < 2.5 && Cuts::pT >= 10*GeV;
+      //Cut lep_veto_cuts = Cuts::abseta < 2.5 && Cuts::pT >= 10*GeV;
       
       // photons for dressing leptons
       IdentifiedFinalState photons(fs);
@@ -78,10 +78,10 @@ namespace Rivet {
       
       //leptons meeting the following cuts are not to be included in jet clustering
       VetoedFinalState jet_input(fs);
-      DressedLeptons vetoDressedMuons(photons, promptMuons, 0.1, lep_veto_cuts, true);
-      DressedLeptons vetoDressedElectrons(photons, promptElectrons, 0.1, lep_veto_cuts, true);
-      jet_input.addVetoOnThisFinalState(vetoDressedMuons);
-      jet_input.addVetoOnThisFinalState(vetoDressedElectrons);
+      //DressedLeptons vetoDressedMuons(photons, promptMuons, 0.1, lep_veto_cuts, true);
+      //DressedLeptons vetoDressedElectrons(photons, promptElectrons, 0.1, lep_veto_cuts, true);
+      jet_input.addVetoOnThisFinalState(dressedMuons);
+      jet_input.addVetoOnThisFinalState(dressedElectrons);
       declare(FastJets(jet_input, FastJets::ANTIKT, 0.4), "Jets");
 
       

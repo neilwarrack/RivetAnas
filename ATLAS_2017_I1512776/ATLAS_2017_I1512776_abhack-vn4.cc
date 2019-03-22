@@ -7,6 +7,7 @@
 #include "Rivet/Projections/MissingMomentum.hh"
 #include "Rivet/Projections/PartonicTops.hh"
 #include "Rivet/Projections/PromptFinalState.hh"
+#include "Rivet/Projections/VetoedFinalState.hh"
 
 namespace Rivet {
 
@@ -31,17 +32,65 @@ namespace Rivet {
       declare(PartonicTops(PartonicTops::ALL ), "AllPartonicTops");
 
       // Leptons, jets and MET
-      declare(DressedLeptons(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV), "Leptons");
+      //declare(DressedLeptons(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV), "Leptons");
+      //DressedLeptons dressedLeps(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
+
+
+      // direct copy (with lines missing) from single top groups rivet///////////////////
+      // Cut lep_cuts = (Cuts::abseta < 2.5) && (Cuts::pT >= 20*GeV);      
+      // // All final state particles
+      // FinalState fs(Cuts::abseta < 5);
+      // // Get photons to dress leptons
+      // IdentifiedFinalState photons(Cuts::abseta < 5);
+      // photons.acceptIdPair(PID::PHOTON);
+      // // Projection to find the electrons
+      // IdentifiedFinalState el_id(fs);
+      // el_id.acceptIdPair(PID::ELECTRON);
+      // PromptFinalState electrons(el_id);
+      // electrons.acceptTauDecays(true);
+      // DressedLeptons dressedelectrons(photons, electrons, 0.1,lep_cuts,true,true );
+      // // Projection to find the muons
+      // IdentifiedFinalState mu_id(fs);
+      // mu_id.acceptIdPair(PID::MUON);
+      // PromptFinalState muons(mu_id);
+      // muons.acceptTauDecays(true);
+      // DressedLeptons dressedmuons(photons, muons, 0.1, lep_cuts, true, true);
+      // IdentifiedFinalState nu;
+      // nu.acceptNeutrinos();
+      // PromptFinalState neutrinos(nu);
+      // neutrinos.acceptTauDecays(true);
+      // VetoedFinalState vfs;
+      // vfs.addVetoOnThisFinalState(neutrinos);
+      // vfs.addVetoOnThisFinalState(dressedmuons);
+      // vfs.addVetoOnThisFinalState(dressedelectrons);
+      // FastJets jets(vfs, FastJets::ANTIKT, 0.4);
+      // jets.useInvisibles();
+      // declare(jets, "Jets");
+      //////////////END///////////////////////////////////////////////////////////////////
+
+      // MY REWORKING OF THE ABOVE CODE///////////////////////////////////////////////////
+      // Leptons
+      Cut lep_cuts = Cuts::abseta < 2.5 
+	&& (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON);
+      PromptFinalState bareLeptons(lep_cuts,true,true); // true,true accepts tau and
+                                                        // muon decays respectively
+      IdentifiedFinalState photons(Cuts::abseta < 2.6 && Cuts::abspid == PID::PHOTON);                   DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
+      declare(dressedLeptons, "Leptons");
+
+      // Jets
+      //FinalState vfs;
       VetoedFinalState vfs;
+      vfs.vetoNeutrinos();
       vfs.addVetoOnThisFinalState(dressedLeptons);
-      IdentifiedFinalState nu;
-      nu.acceptNeutrinos();
-      PromptFinalState neutrinos_met(nu_id);
-      neutrinos_met.acceptTauDecays(true);// was false??                     
-      declare(neutrinos_met, "neutrinos_met");
-      vfs.addVetoOnThisFinalState(nutrinos_met);
-      declare(FastJets(vfs, FastJets::ANTIKT, 0.4), "Jets");
-      declare(MissingMomentum(FinalState(Cuts::abseta < 4.9)), "MET");
+      FastJets jets(vfs, FastJets::ANTIKT, 0.4);
+      jets.useInvisibles();
+      declare(jets, "Jets");
+      //////// END ///////////////////////////////////////////////////////////////////////
+
+
+      //vfs.addVetoOnThisFinalState(dressedLeps);
+      
+      declare(MissingMomentum(FinalState(Cuts::abseta < 4.5)), "MET");
 
 
       // Book histograms and counters
@@ -90,10 +139,10 @@ namespace Rivet {
         const Particle& top = allTops[0];
 
         size_t itop = (top.charge() > 0) ? 0 : 1;
-	   _h_AbsPrtnDiffXsecTPt[itop]->fill( allTops[0].pT(),      event.weight());
-	   _h_AbsPrtnDiffXsecTY[itop] ->fill(  allTops[0].absrap(), event.weight());
-	   _h_NrmPrtnDiffXsecTPt[itop]->fill( allTops[0].pT(),      event.weight());
-	   _h_NrmPrtnDiffXsecTY[itop] ->fill(  allTops[0].absrap(), event.weight());
+	   _h_AbsPrtnDiffXsecTPt[itop]->fill( allTops[0].pT(),     event.weight());
+	   _h_AbsPrtnDiffXsecTY[itop] ->fill( allTops[0].absrap(), event.weight());
+	   _h_NrmPrtnDiffXsecTPt[itop]->fill( allTops[0].pT(),     event.weight());
+	   _h_NrmPrtnDiffXsecTY[itop] ->fill( allTops[0].absrap(), event.weight());
 
       } while (false);
 
@@ -111,27 +160,36 @@ namespace Rivet {
 
         // Jet selection
         const Jets jets = apply<JetAlg>(event, "Jets").jetsByPt(Cuts::abseta < 4.5 && Cuts::pT > 30*GeV);
+	MSG_DEBUG("jets.size() = " << jets.size());
         // Filter into b-jets and light/non-b jets
         Jets bjets, ljets;
-        for (const Jet& j : jets)
+        for (const Jet& j : jets){
+	  if (j.bTagged(Cuts::pT > 5*GeV)) MSG_DEBUG("jet btagged with pT > 5GeV");
           if (j.abseta() < 2.5 && j.bTagged(Cuts::pT > 5*GeV)) bjets += j; else ljets += j;
-        if (bjets.size() != 1 || ljets.size() < 1) break; /// @todo or |ljets| != 1?
+       	}
+	if (bjets.size() != 1) {MSG_DEBUG("N_bjets (w pT>5GeV) = " << bjets.size()); break;}
+	cutflow[2]++;
+	if (ljets.size() != 1) {MSG_DEBUG("N_ljets = " << ljets.size()); break;}
+	cutflow[3]++;	
+	//if (bjets.size() != 1 || ljets.size() != 1) break;
         MSG_DEBUG("  Passed jet selection");
-        cutflow[2]++;
+        
 
         //const Jet& jet1 = jets[0];
         const Jet& bjet = bjets[0];
         const Jet& ljet = ljets[0];
 
         // Lepton-jet isolation cut
-        if (any(jets, deltaRLess(lep, 0.4))) break; /// @todo Or only compare to {bjet,ljet}?
-        cutflow[3]++;
+        if (any(jets, deltaRLess(lep, 0.4))) break;
+        MSG_DEBUG("  Passed jet isolation cuts");
+	cutflow[4]++;
+
         // Mlb cut
         const FourMomentum plb = lep.mom() + bjet.mom();
         if (plb.mass() > 160*GeV) break;
         MSG_DEBUG("  Passed Mlb selection");
-        MSG_DEBUG("    Passed fiducial selection");
-        cutflow[4]++;
+        MSG_DEBUG("  Passed fiducial selection");
+        cutflow[5]++;
 
         // Pseudo-W and pseudo-top
         const MissingMomentum& mm = apply<MissingMomentum>(event, "MET");
@@ -160,13 +218,13 @@ namespace Rivet {
       // branching ratio of W->lepton
       double lepBR = 0.324;
 
-      scale( _h_AbsPtclDiffXsecTPt, crossSection()/femtobarn/sumOfWeights() );
-      scale( _h_AbsPtclDiffXsecTY,  crossSection()/sumOfWeights() );
+      scale( _h_AbsPtclDiffXsecTPt, crossSection()/femtobarn/sumOfWeights() / lepBR );
+      scale( _h_AbsPtclDiffXsecTY,  crossSection()/sumOfWeights() / lepBR );
       normalize(_h_NrmPtclDiffXsecTPt);
       normalize(_h_NrmPtclDiffXsecTY);
       //
-      scale( _h_AbsPtclDiffXsecJPt, crossSection()/femtobarn/sumOfWeights());
-      scale( _h_AbsPtclDiffXsecJY,  crossSection()/sumOfWeights() );
+      scale( _h_AbsPtclDiffXsecJPt, crossSection()/femtobarn/sumOfWeights() / lepBR );
+      scale( _h_AbsPtclDiffXsecJY,  crossSection()/sumOfWeights() / lepBR );
       normalize(_h_NrmPtclDiffXsecJPt);
       normalize(_h_NrmPtclDiffXsecJY);
       //
