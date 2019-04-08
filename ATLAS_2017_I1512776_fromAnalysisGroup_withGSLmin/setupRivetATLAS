@@ -1,0 +1,3 @@
+setupATLAS
+asetup  21.6.3,AthGeneration
+source setupRivet.sh
