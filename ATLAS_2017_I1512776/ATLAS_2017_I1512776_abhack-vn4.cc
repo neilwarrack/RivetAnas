@@ -72,17 +72,17 @@ namespace Rivet {
       // Leptons
       Cut lep_cuts = Cuts::abseta < 2.5 
 	&& (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON);
-      PromptFinalState bareLeptons(lep_cuts,true,true); // true,true accepts tau and
-                                                        // muon decays respectively
+      PromptFinalState bareLeptons(lep_cuts,true); // 'true' accepts tau decays
       IdentifiedFinalState photons(Cuts::abseta < 2.6 && Cuts::abspid == PID::PHOTON);
-      DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
+      DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV);
       declare(dressedLeptons, "Leptons");
 
       // Jets
+      DressedLeptons vetoDressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
       //FinalState vfs;
       VetoedFinalState vfs;
       vfs.vetoNeutrinos();
-      vfs.addVetoOnThisFinalState(dressedLeptons);
+      vfs.addVetoOnThisFinalState(vetoDressedLeptons);
       FastJets jets(vfs, FastJets::ANTIKT, 0.4);
       jets.useInvisibles();
       declare(jets, "Jets");
@@ -119,11 +119,7 @@ namespace Rivet {
 	_h_NrmPrtnDiffXsecTY[itop]	  = bookHisto1D(4,1,3+itop);
       }
 
-      for(int i = 0; i < 9; i++) {
-	cutflow[i] = 0;
-	cutflow_ele[i] = 0;
-	cutflow_mu[i] = 0;
-      }
+      for(int i = 0; i < 9; i++) cutflow[i] = 0;
 
     }
 
@@ -195,11 +191,11 @@ namespace Rivet {
 
         // Pseudo-W and pseudo-top
         const MissingMomentum& mm = apply<MissingMomentum>(event, "MET");
-
+	double zMisMom = mm.missingMom().z();
 	Vector3 pt3Mis = mm.vectorPt();
 	FourMomentum pLep = lep.mom();
 
-	FourMomentum pNu = recoNu(pt3Mis, pLep);
+	FourMomentum pNu = recoNu(pt3Mis, pLep, zMisMom);
 
 	const FourMomentum pW = pLep + pNu;
 	const FourMomentum pTop = pW + bjet.mom();
@@ -263,7 +259,7 @@ namespace Rivet {
 
 
 
-    FourMomentum recoNu(Vector3& neutrino, FourMomentum& lepton) {
+    FourMomentum recoNu(Vector3& neutrino, FourMomentum& lepton, double z_before) {
       float wMass = 80.399*GeV; // in GeV
       FourMomentum return_neutrino;
       vector<float> pZ = getNeutrinoPzSolutions(neutrino, lepton, wMass);
@@ -271,18 +267,18 @@ namespace Rivet {
       if(nSolutions == 2) {
         neutrino.setZ( std::fabs(pZ[0]) < std::fabs(pZ[1]) ? pZ[0] : pZ[1] );
       } else if(nSolutions == 0) {
-        float mTSq = 2. * (neutrino.mod()*lepton.pT()
-			   - neutrino.x()*lepton.x()
-			   - neutrino.y()*lepton.y());
-        // neutrino.SetPerp( wMass*wMass/mTSq*neutrino.Pt() );
-        neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
-        neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
+	cutflow[8]++;
+
+        // float mTSq = 2. * (neutrino.mod()*lepton.pT()
+	// 		   - neutrino.x()*lepton.x()
+	// 		   - neutrino.y()*lepton.y());
+	// neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
+        // neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
+	neutrino.setZ(z_before);
+	cout << "scaled pT of nu: p_z = " << neutrino.z() << " (Before: " << z_before << ")" << endl;
+
       } else if(nSolutions == 1) {
         neutrino.setZ(pZ[0]);
-      } else {
-        std::cout << "(ERROR)\tKinematics::reconstuctNeutrino():\tImpossible number of pZ solutions: " << nSolutions << ". Setting to NAN." << std::endl;
-        neutrino.setZ(NAN);
-	cutflow[8]++;
       }
       return_neutrino.setPM(neutrino.x(), neutrino.y(), neutrino.z(), 0.0);
       return return_neutrino;
@@ -295,12 +291,16 @@ namespace Rivet {
       float alpha = 0.5 * wMass * wMass + lepton.x() * neutrino.x() + lepton.y() * neutrino.y();
       float pT_lep2 = lepton.perp2();
       float discriminant = lepton.vector3().mod2() * (alpha * alpha - pT_lep2 * neutrino.mod2());
-      if (discriminant < 0.)
+      if (discriminant < 0.){
+	//cout << "WARNING: complex solns to nu_z calc." << endl;
+	
 	return pz;
+      }
       
       float pz_offset = alpha * lepton.z() / pT_lep2;
       
       float squareRoot = sqrt(discriminant);
+      
       if(squareRoot / pT_lep2 < 1.e-6)
 	pz.push_back(pz_offset);
       else {
@@ -328,8 +328,7 @@ namespace Rivet {
     Histo1DPtr _h_AbsPrtnDiffXsecTPt[2], _h_AbsPrtnDiffXsecTY[2], _h_NrmPrtnDiffXsecTPt[2], _h_NrmPrtnDiffXsecTY[2];
 
     int cutflow[9];
-    int cutflow_ele[9];
-    int cutflow_mu[9];
+
     //@}
 
 
