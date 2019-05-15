@@ -1,5 +1,5 @@
 # include("GeneratorUtils/StdAnalysisSetup.py")
-theApp.EvtMax = 5
+theApp.EvtMax = 5000000
 
 import os
 import AthenaPoolCnvSvc.ReadAthenaPool
@@ -17,16 +17,16 @@ svcMgr.EventSelector.InputCollections = [
 # "/nfs/atlas/nwarrack/user.dhirsch.110121.Herwig_singletop_tchan2to3nlo_lept_CT10f4_8TeV.evgen/110121.Herwig_singletop_tchan2to3nlo_lept_CT10f4_8TeV._00052.pool.root",
 
 "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00001.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00002.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00003.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00004.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00005.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00006.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00007.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00008.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00009.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00010.pool.root",
- # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00011.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00002.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00003.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00004.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00005.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00006.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00007.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00008.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00009.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00010.pool.root",
+# "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00011.pool.root",
 # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00012.pool.root",
 # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00013.pool.root",
 # "/nfs/atlas/nwarrack/user.dhirsch.AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV.evgen/AcerMC39.110069.singletop_tchan_lept_scale_115_CTEQ6L1_8TeV._00014.pool.root",
@@ -77,7 +77,7 @@ from Rivet_i.Rivet_iConf import Rivet_i
 rivet = Rivet_i()
 rivet.AnalysisPath = os.environ['PWD']
 #rivet.Analyses += [ 'ATLAS_2017_I1512776' ]
-rivet.Analyses += [ 'RivetMC_tchan_particle' ]
+rivet.Analyses += [ 'MC_tchan_particle' ]
 rivet.RunName = ""
 #rivet.HistoFile = "MG5_atNLO_Herwig"
 rivet.HistoFile = "Acer"

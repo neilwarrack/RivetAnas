@@ -1,0 +1,304 @@
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d01-x01-y01
+Path=/REF/ATLAS_2017_I1512776/d01-x01-y01
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+15.0    15.0    20.0                    38.0	3.4	3.3
+40.0    5.0     10.0                    120.9	8.2	8.0
+60.0    10.0    15.0                    125.2	7.9	7.7
+90.0    15.0    10.0                    68.1	5.0	5.1
+125.0   25.0    25.0                    27.5	2.1	2.1
+175.0   25.0    25.0                    7.55	0.56	0.67
+250.0   50.0    50.0                    1.5	0.23	0.23
+# END YODA_SCATTER2D 
+
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d01-x01-y02
+Path=/REF/ATLAS_2017_I1512776/d01-x01-y02
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+15.0    15.0    20.0                    22.5	2.4	2.5
+40.0    5.0     10.0                    85.6	6.3	7.2
+60.0    10.0    15.0                    84.7	6.9	5.4
+90.0    15.0    10.0                    30.9	4.4	4.6
+125.0   25.0    25.0                    14.4	1.2	1.2
+200.0   50.0    100.0                  	1.35	0.3	0.35
+# END YODA_SCATTER2D 
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d01-x01-y03
+Path=/REF/ATLAS_2017_I1512776/d01-x01-y03
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.1    0.1    0.05	 		9.0	0.43	0.43
+0.2    0.05    0.1	 		8.99	0.49	0.47
+0.4    0.1    0.05	 		8.15	0.60	0.59
+0.6    0.15    0.1	 		6.88	0.37	0.38
+0.8    0.1    0.2	 		5.70	0.48	0.49
+1.1    0.1    0.2	 		3.47	0.25	0.26
+1.4    0.1    0.8	 		1.61	0.11	0.11
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d01-x01-y04
+Path=/REF/ATLAS_2017_I1512776/d01-x01-y04
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.1    0.1    0.05	 		6.65	0.49	0.5
+0.2    0.05    0.1	 		4.68	0.43	0.41
+0.4    0.1    0.05	 		4.97	0.39	0.4
+0.6    0.15    0.1	 		4.08	0.33	0.34
+0.8    0.1    0.2	 		3.21	0.27	0.27
+1.1    0.1    0.2	 		2.3	0.21	0.2
+1.4    0.1    0.8	 		0.76	0.07	0.08
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d02-x01-y01
+Path=/REF/ATLAS_2017_I1512776/d02-x01-y01
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+15.0    15.0    20.0                    3.85e-03	0.22e-03	0.22e-03
+40.0    5.0     10.0                    12.24e-03	0.59e-03	0.61e-03
+60.0    10.0    15.0                    12.67e-03	0.54e-03	0.54e-03
+90.0    15.0    10.0                    6.89e-03	0.34e-03	0.36e-03
+125.0   25.0    25.0                    2.78e-03	0.18e-03	0.18e-03
+175.0   25.0    25.0                    0.765e-03	0.046e-03	0.056e-03
+250.0   50.0    50.0                    0.152e-03	0.022e-03	0.022e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d02-x01-y02
+Path=/REF/ATLAS_2017_I1512776/d02-x01-y02
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+15.0    15.0    20.0                    3.82e-03	0.24e-03	0.27e-03
+40.0    5.0     10.0                    14.6e-03	0.8e-03		1.0e-03
+60.0    10.0    15.0                    14.41e-03	0.81e-03	0.51e-03
+90.0    15.0    10.0                    5.25e-03	0.62e-03	0.65e-03
+125.0   25.0    25.0                    2.44e-03	0.13e-03	0.13e-03
+200.0   50.0    100.0                   0.23e-03	0.046e-03	0.055e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d02-x01-y03
+Path=/REF/ATLAS_2017_I1512776/d02-x01-y03
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.1    0.1    0.05	 		914e-03	18e-03	19e-03
+0.2    0.05    0.1	 		913e-03	43e-03	41e-03
+0.4    0.1    0.05	 		828e-03	46e-03	44e-03
+0.6    0.15    0.1	 		699e-03	17e-03	19e-03
+0.8    0.1    0.2	 		579e-03	36e-03	36e-03
+1.1    0.1    0.2	 		353e-03	11e-03	13e-03
+1.4    0.1    0.8	 		164e-03	4e-03	4e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d02-x01-y04
+Path=/REF/ATLAS_2017_I1512776/d02-x01-y04
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.1    0.1    0.05	 		1145e-03	55e-03	57e-03
+0.2    0.05    0.1	 		806e-03	57e-03	51e-03
+0.4    0.1    0.05	 		856e-03	40e-03	44e-03
+0.6    0.15    0.1	 		703e-03	39e-03	38e-03
+0.8    0.1    0.2	 		553e-03	30e-03	28e-03
+1.1    0.1    0.2	 		396e-03	17e-03	17e-03
+1.4    0.1    0.8	 		132e-03	7e-03	8e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d03-x01-y01
+Path=/REF/ATLAS_2017_I1512776/d03-x01-y01
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+25.0    25.0    25.0	 		467.0	39	34
+75.0    25.0    25.0	 		404.0	27	28
+125.0    25.0    25.0	 		149.0	18	17
+175.0    25.0    25.0	 		49.2	4.1	5.0
+250.0    50.0    50.0	 		10.2	1.3	2.1
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d03-x01-y02
+Path=/REF/ATLAS_2017_I1512776/d03-x01-y02
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0	 0.0	 50.0	 		310	35	36
+50.0	 0.0	 50.0			228	20	19
+100.0	 0.0	 50.0			76	14	14
+150.0	 0.0	 150.0			9.1	2.6	3.1
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d03-x01-y03
+Path=/REF/ATLAS_2017_I1512776/d03-x01-y03
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0	 0.0	 0.3	 		32.7	2.1	2.5	
+0.3	 0.0	 0.4			31.5	2.4	2.2
+0.7	 0.0	 0.6			25.3	1.9	1.9
+1.3	 0.0	 0.9			15.4	1.2	1.2
+# END YODA_SCATTER2D
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d03-x01-y04
+Path=/REF/ATLAS_2017_I1512776/d03-x01-y04
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0	 0.0	 0.3	 		21.5	1.9	1.8	
+0.3	 0.0	 0.4			18.8	1.7	1.7
+0.7	 0.0	 0.6			16.3	1.6	1.6	
+1.3	 0.0	 0.9			7.0	1.1	1.2	
+# END YODA_SCATTER2D
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d04-x01-y01
+Path=/REF/ATLAS_2017_I1512776/d04-x01-y01
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+25.0     25.0    25.0			8.47e-03	0.43e-03	0.32e-03
+75.0     25.0    25.0	 		7.42e-03	0.4e-03		0.47e-03
+125.0    25.0    25.0	 		2.73e-03	0.29e-03	0.27e-03
+175.0    25.0    25.0	 		0.9e-03		0.07e-03	0.08e-03
+250.0    50.0    50.0	 		0.187e-03	0.022e-03	0.019e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d04-x01-y02
+Path=/REF/ATLAS_2017_I1512776/d04-x01-y02
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0	 0.0	 50.0	 		9.67e-03	0.76e-03	0.77e-03
+50.0	 0.0	 50.0			7.11e-03	0.51e-03	0.49e-03
+100.0	 0.0	 50.0			2.36e-03	0.46e-03	0.45e-03
+150.0	 0.0	 150.0			0.284e-03	0.076e-03	0.089e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d04-x01-y03
+Path=/REF/ATLAS_2017_I1512776/d04-x01-y03
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0	 0.0	 0.3	 		636e-03	39e-03	47e-03
+0.3	 0.0	 0.4			613e-03	33e-03	31e-03
+0.7	 0.0	 0.6			492e-03	27e-03	26e-03
+1.3	 0.0	 0.9			299e-03	15e-03	14e-03
+# END YODA_SCATTER2D
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d04-x01-y04
+Path=/REF/ATLAS_2017_I1512776/d04-x01-y04
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0	 0.0	 0.3	 		714e-03	46e-03	41e-03
+0.3	 0.0	 0.4			626e-03	46e-03	46e-03
+0.7	 0.0	 0.6			543e-03	43e-03	44e-03
+1.3	 0.0	 0.9			233e-03	29e-03	30e-03
+# END YODA_SCATTER2D
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d05-x01-y01
+Path=/REF/ATLAS_2017_I1512776/d05-x01-y01
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+30.0     0.0	 15.0	 		199	19	18
+45.0	 0.0	 15.0			151	14	13
+60.0     0.0	 15.0			102.3	5.8	6.8
+75.0     0.0	 25.0			58.5	3.9	3.5
+100.0	 0.0	 50.0			22.8	1.4	1.4
+150.0 	 0.0	 150.0			3.29	0.22	0.24
+# END YODA_SCATTER2D
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d05-x01-y02
+Path=/REF/ATLAS_2017_I1512776/d05-x01-y02
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+30.0     0.0	 15.0	 		147	12	12
+45.0	 0.0	 15.0			86.4	8.5	8.3
+60.0     0.0	 15.0			54.2	6.0	5.1
+75.0     0.0	 25.0			33.0	3.9	3.7
+100.0	 0.0	 50.0			10.7	1.2	1.3
+150.0 	 0.0	 150.0			1.36	0.22	0.26
+# END YODA_SCATTER2D 
+
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d05-x01-y03
+Path=/REF/ATLAS_2017_I1512776/d05-x01-y03
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0      0.0	 1.2	 		1.62	0.28	0.28	
+1.2	 0.0	 0.5			2.40	0.2	0.22
+1.7      0.0	 0.5			2.21	0.2	0.19
+2.2      0.0	 0.5			3.72	0.19	0.19
+2.7	 0.0	 0.6	 		3.23	0.17	0.16
+3.3 	 0.0	 1.2			1.50	0.1	0.1
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d05-x01-y04
+Path=/REF/ATLAS_2017_I1512776/d05-x01-y04
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0      0.0	 1.2	 		1.7	0.27	0.27	
+1.2	 0.0	 0.5			1.39	0.18	0.18
+1.7      0.0	 0.5			1.85	0.16	0.16
+2.2      0.0	 0.5			1.73	0.12	0.12
+2.7	 0.0	 0.6	 		1.7	0.12	0.12
+3.3 	 0.0	 1.2			0.655	0.051	0.053
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d06-x01-y01
+Path=/REF/ATLAS_2017_I1512776/d06-x01-y01
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+30.0     0.0	 15.0	 		20.1e-03	1.2e-03		1.2e-03
+45.0	 0.0	 15.0			15.26e-03	0.94e-03	0.91e-03
+60.0     0.0	 15.0			10.36e-03	0.35e-03	0.46e-03
+75.0     0.0	 25.0			5.92e-03	0.27e-03	0.24e-03
+100.0	 0.0	 50.0			2.31e-03	0.11e-03	0.11e-03
+150.0 	 0.0	 150.0			0.333e-03	0.015e-03	0.019e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d06-x01-y02
+Path=/REF/ATLAS_2017_I1512776/d06-x01-y02
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+30.0     0.0	 15.0	 		25.0e-03	1.0e-03		1.1e-03
+45.0	 0.0	 15.0			14.7e-03	1.0e-03		1.0e-03
+60.0     0.0	 15.0			9.21e-03	0.88e-03	0.68e-03
+75.0     0.0	 25.0			5.62e-03	0.41e-03	0.36e-03
+100.0	 0.0	 50.0			1.82e-03	0.11e-03	0.14e-03
+150.0 	 0.0	 150.0			0.231e-03	0.038e-03	0.044e-03
+# END YODA_SCATTER2D 
+
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d06-x01-y03
+Path=/REF/ATLAS_2017_I1512776/d06-x01-y03
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0      0.0	 1.2	 		164e-03		22e-03	22e-03
+1.2	 0.0	 0.5			244e-03		11e-03	15e-03
+1.7      0.0	 0.5			224e-03		11e-03	10e-03
+2.2      0.0	 0.5			378e-03		16e-03	16e-03
+2.7	 0.0	 0.6	 		328e-03		15e-03	15e-03
+3.3 	 0.0	 1.2			152.5e-03	9.3e-03	9.2e-03
+# END YODA_SCATTER2D 
+
+
+# BEGIN YODA_SCATTER2D /REF/ATLAS_2017_I1512776/d06-x01-y04
+Path=/REF/ATLAS_2017_I1512776/d06-x01-y04
+Type=Scatter2D
+# xval   xerr-   xerr+   yval   yerr-   yerr+
+0.0      0.0	 1.2	 		205e-03	31e-03	31e-03
+1.2	 0.0	 0.5			243e-03	16e-03	14e-03
+1.7      0.0	 0.5			324e-03	17e-03	20e-03
+2.2      0.0	 0.5			305e-03	19e-03	20e-03
+2.7	 0.0	 0.6	 		299e-03	26e-03	26e-03
+3.3 	 0.0	 1.2			155e-03	11e-03	11e-03
+# END YODA_SCATTER2D 

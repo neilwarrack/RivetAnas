@@ -27,8 +27,48 @@ namespace Rivet {
     void init() {
 
       // For parton level analysis
+      declare(PartonicTops(PartonicTops::E_MU), "emuLeptonicTops");
+      declare(PartonicTops(PartonicTops::E_MU_TAU), "LeptonicTops");
       declare(PartonicTops(PartonicTops::ALL ), "AllPartonicTops");
 
+      // Leptons, jets and MET
+      //declare(DressedLeptons(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV), "Leptons");
+      //DressedLeptons dressedLeps(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
+
+
+      // direct copy (with lines missing) from single top groups rivet///////////////////
+      // Cut lep_cuts = (Cuts::abseta < 2.5) && (Cuts::pT >= 20*GeV);      
+      // // All final state particles
+      // FinalState fs(Cuts::abseta < 5);
+      // // Get photons to dress leptons
+      // IdentifiedFinalState photons(Cuts::abseta < 5);
+      // photons.acceptIdPair(PID::PHOTON);
+      // // Projection to find the electrons
+      // IdentifiedFinalState el_id(fs);
+      // el_id.acceptIdPair(PID::ELECTRON);
+      // PromptFinalState electrons(el_id);
+      // electrons.acceptTauDecays(true);
+      // DressedLeptons dressedelectrons(photons, electrons, 0.1,lep_cuts,true,true );
+      // // Projection to find the muons
+      // IdentifiedFinalState mu_id(fs);
+      // mu_id.acceptIdPair(PID::MUON);
+      // PromptFinalState muons(mu_id);
+      // muons.acceptTauDecays(true);
+      // DressedLeptons dressedmuons(photons, muons, 0.1, lep_cuts, true, true);
+      // IdentifiedFinalState nu;
+      // nu.acceptNeutrinos();
+      // PromptFinalState neutrinos(nu);
+      // neutrinos.acceptTauDecays(true);
+      // VetoedFinalState vfs;
+      // vfs.addVetoOnThisFinalState(neutrinos);
+      // vfs.addVetoOnThisFinalState(dressedmuons);
+      // vfs.addVetoOnThisFinalState(dressedelectrons);
+      // FastJets jets(vfs, FastJets::ANTIKT, 0.4);
+      // jets.useInvisibles();
+      // declare(jets, "Jets");
+      //////////////END///////////////////////////////////////////////////////////////////
+
+      // MY REWORKING OF THE ABOVE CODE///////////////////////////////////////////////////
       // Leptons
       Cut lep_cuts = Cuts::abseta < 2.5 
 	&& (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON);
@@ -38,21 +78,29 @@ namespace Rivet {
       declare(dressedLeptons, "Leptons");
 
       // Jets
+      //FinalState vfs;
       VetoedFinalState vfs;
       vfs.vetoNeutrinos();
       vfs.addVetoOnThisFinalState(dressedLeptons);
       FastJets jets(vfs, FastJets::ANTIKT, 0.4);
       jets.useInvisibles();
       declare(jets, "Jets");
+      //////// END ///////////////////////////////////////////////////////////////////////
 
+
+      //vfs.addVetoOnThisFinalState(dressedLeps);
+      
+      //      declare(MissingMomentum(FinalState(Cuts::abseta < 4.5)), "MET");
       declare(MissingMomentum(FinalState()), "MET");
 
 
       // Book histograms and counters
-
+      // _c_sumw_fid =         bookCounter("sumw_fid_tot");
       // Loop for equivalent t and tbar selections
       for (size_t itop = 0; itop < 2; ++itop) {
-
+        // const string xtop = (itop == 0) ? "tq" : "tbarq";
+        // _c_sumw_fid[itop] =      bookCounter("sumw_fid_"+xtop);
+        // _c_Xsec_fid[itop] =      bookCounter("Xsec_fid_"+xtop);
         //
         _h_AbsPtclDiffXsecTPt[itop]   = bookHisto1D(1,1,1+itop);
         _h_AbsPtclDiffXsecTY[itop]    = bookHisto1D(1,1,3+itop);
@@ -82,6 +130,7 @@ namespace Rivet {
       // PARTON-LEVEL ANALYSIS
       do { // trick to allow early exit from selection without full return
 
+	//const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
 	const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
         if (allTops.size() != 1) break;
         const Particle& top = allTops[0];
@@ -98,7 +147,6 @@ namespace Rivet {
       // PARTICLE-LEVEL ANALYSIS
       do { // trick to allow early exit from selection without full return
 	cutflow[0]++;
-
         // Lepton selection
         const Particles& leps = apply<FinalState>(event, "Leptons").particlesByPt();
         MSG_DEBUG("  #leps = " << leps.size());
@@ -120,6 +168,7 @@ namespace Rivet {
 	cutflow[2]++;
 	if (ljets.size() != 1) {MSG_DEBUG("N_ljets = " << ljets.size()); break;}
 	cutflow[3]++;	
+	//if (bjets.size() != 1 || ljets.size() != 1) break;
         MSG_DEBUG("  Passed jet selection");
         
 
@@ -150,6 +199,11 @@ namespace Rivet {
 	const FourMomentum pW = pLep + pNu;
 	const FourMomentum pTop = pW + bjet.mom();
 
+
+        //const FourMomentum pW = lep.mom() + mm.missingMom();
+	//	const FourMomentum pW = lep.mom() + mm.missingMom();
+	//const FourMomentum pW = lep.mom() + WBoson;
+        
 
         // Fill counters and histograms
         size_t itop = (lep.charge() > 0) ? 0 : 1;
@@ -194,7 +248,7 @@ namespace Rivet {
       normalize(_h_NrmPrtnDiffXsecTY);
 
       for (int i = 0; i < 9; i++) {
-        cout << "Cutflow at step " << i << ": " << cutflow[i]<<" percent: "<< 100*(float)cutflow[i]/(float)cutflow[0] << endl;
+        cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
       }
     
 
@@ -214,12 +268,12 @@ namespace Rivet {
       } else if(nSolutions == 0) {
 	cutflow[8]++;
 
-        float mTSq = 2. * (neutrino.mod()*lepton.pT()
-			   - neutrino.x()*lepton.x()
-			   - neutrino.y()*lepton.y());
-	neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
-        neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
-
+        // float mTSq = 2. * (neutrino.mod()*lepton.pT()
+	// 		   - neutrino.x()*lepton.x()
+	// 		   - neutrino.y()*lepton.y());
+	// neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
+        // neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
+	neutrino.setZ(z_before);
 	cout << "scaled pT of nu: p_z = " << neutrino.z() << " (Before: " << z_before << ")" << endl;
 
       } else if(nSolutions == 1) {
@@ -237,6 +291,8 @@ namespace Rivet {
       float pT_lep2 = lepton.perp2();
       float discriminant = lepton.vector3().mod2() * (alpha * alpha - pT_lep2 * neutrino.mod2());
       if (discriminant < 0.){
+	//cout << "WARNING: complex solns to nu_z calc." << endl;
+	
 	return pz;
       }
       

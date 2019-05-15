@@ -4,6 +4,14 @@
 *~
 *#
 
+# athena files
+*asetup.save
+*eventLoopHeartBeat.txt
+*PoolFileCatalog.xml*
+*PoolFileCatalog.xml
+*.root
+
+
 # Analysis specific stuff
 #.yoda
 *.hepmc
@@ -25,7 +33,7 @@ runPythia.sh
 **/rivet-plots/
 rivet-plots/
 #/ValidationPlots
-
+*/rivet-plots*
 
 
 # specific subdirs

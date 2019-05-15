@@ -41,50 +41,6 @@
 
 #include "neutrino.h"
 
-///++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-#include "multimin.h"
-#include <cmath>
-
-inline double sqr(double x) { return x*x; }
-
-double g(double x, double y) {
-  // const double r2 = sqr(x-3) + sqr(y-5);
-  // const double r = sqrt(r2);
-  // const double cos2r = sqr(cos(r));
-  // return -cos2r/(r + 1e-6);
-  return 10*sqr(x-1.5) + 20*sqr(y-2.5) + 30;
-}
-
-
-void f(const size_t n, const double *x,void *fparams,double *fval){
-  // double *p = (double *) fparams;
-  // *fval=p[2]*(x[0]-p[0])*(x[0]-p[0]) + p[3]*(x[1]-p[1])*(x[1]-p[1]) + p[4];
-  *fval = g(x[0], x[1]);
-}
-
-void df(const size_t n, const double *x,void *fparams,double *grad)
-{
-  // double *p = (double *) fparams;
-  // grad[0]=2*p[2]*(x[0]-p[0]);
-  // grad[1]=2*p[3]*(x[1]-p[1]);
-  const double delta = 1e-6;
-  const double f0 = g(x[0], x[1]);
-  const double f1x = g(x[0]+delta, x[1]);
-  const double f1y = g(x[0], x[1]+delta);
-  grad[0] = (f1x-f0)/delta;
-  grad[1] = (f1y-f0)/delta;
-}
-
-void fdf(const size_t n, const double *x,void *fparams,double *fval,double *grad)
-{
-  // double *p = (double *) fparams;
-  // *fval=p[2]*(x[0]-p[0])*(x[0]-p[0]) + p[3]*(x[1]-p[1])*(x[1]-p[1]) + p[4];
-  // grad[0]=2*p[2]*(x[0]-p[0]);
-  // grad[1]=2*p[3]*(x[1]-p[1]);
-  f(n, x, fparams, fval);
-  df(n, x, fparams, grad);
-}
-///+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 using namespace std;
 
 namespace patch
@@ -100,15 +56,15 @@ namespace patch
 namespace Rivet {
   using namespace Cuts;
 
-  class MC_tchan_particle_multimin : public Analysis {
+  class MC_tchan_particle : public Analysis {
   public:
 
     /// @name Constructors etc.
     //@{
 
     /// Constructor
-    MC_tchan_particle_multimin()
-      : Analysis("MC_tchan_particle_multimin")
+    MC_tchan_particle()
+      : Analysis("MC_tchan_particle")
     {
       setNeedsCrossSection(true);
     }
@@ -214,30 +170,6 @@ namespace Rivet {
       for (int i = 0; i < 1; i++) {
         other_checks[i] = 0;
       }
-
-      for (size_t itop = 0; itop < 2; ++itop) {
-        // const string xtop = (itop == 0) ? "tq" : "tbarq";
-        // _c_sumw_fid[itop] =      bookCounter("sumw_fid_"+xtop);
-        // _c_Xsec_fid[itop] =      bookCounter("Xsec_fid_"+xtop);
-        //
-        _h_AbsPtclDiffXsecTPt[itop]   = bookHisto1D(1,1,1+itop);
-        _h_AbsPtclDiffXsecTY[itop]    = bookHisto1D(1,1,3+itop);
-        _h_NrmPtclDiffXsecTPt[itop]   = bookHisto1D(2,1,1+itop);
-        _h_NrmPtclDiffXsecTY[itop]    = bookHisto1D(2,1,3+itop);
-        //
-        _h_AbsPtclDiffXsecJPt[itop]   = bookHisto1D(5,1,1+itop);
-        _h_AbsPtclDiffXsecJY[itop]    = bookHisto1D(5,1,3+itop);
-        _h_NrmPtclDiffXsecJPt[itop]   = bookHisto1D(6,1,1+itop);
-        _h_NrmPtclDiffXsecJY[itop]    = bookHisto1D(6,1,3+itop);
-        //
-        _h_AbsPrtnDiffXsecTPt[itop]	  = bookHisto1D(3,1,1+itop);
-	_h_AbsPrtnDiffXsecTY[itop]	  = bookHisto1D(3,1,3+itop);
-	_h_NrmPrtnDiffXsecTPt[itop]	  = bookHisto1D(4,1,1+itop);
-	_h_NrmPrtnDiffXsecTY[itop]	  = bookHisto1D(4,1,3+itop);
-      }
-
-
-
     }
 
     //=====================================================================
@@ -345,7 +277,6 @@ namespace Rivet {
       cutflow[4]++;
 
       if (good_ljets.size() != 1) { vetoEvent; }
-
       // veto event if there are no good non b-jets
       // Event has to match the t-channel production with a light-quark jet
       cutflow[5]++;
@@ -400,11 +331,9 @@ namespace Rivet {
       Particle _W_boson = returnWboson_byMET_wFit(good_leptons[0], _p_met.x(), _p_met.y(), _p_met.pT(), _p_met.phi());
 
       // fill top quark
-      Particle pTop;
       // Reconstruction of the top quark and top antiqark
       if(isTop) {
         Particle _top_quark = returnTopQuark(_W_boson, good_bjets);
-	pTop = _top_quark;
         for (unsigned int i=0; i< _h_t_pt_top.size(); i++){
           _h_t_pt_top[i]->fill(_top_quark.momentum().pT()/GeV, _weight);
           _h_t_pt_top_norm[i]->fill(_top_quark.momentum().pT()/GeV, _weight);
@@ -415,8 +344,7 @@ namespace Rivet {
         }
       } else {
         Particle _top_antiquark = returnTopQuark(_W_boson, good_bjets);
-        pTop = _top_antiquark;
-	for (unsigned int i=0; i< _h_t_pt_antitop.size(); i++){
+        for (unsigned int i=0; i< _h_t_pt_antitop.size(); i++){
           _h_t_pt_antitop[i]->fill(_top_antiquark.momentum().pT()/GeV, _weight);
           _h_t_pt_antitop_norm[i]->fill(_top_antiquark.momentum().pT()/GeV, _weight);
         }
@@ -425,16 +353,6 @@ namespace Rivet {
           _h_t_rap_antitop_norm[i]->fill(_top_antiquark.momentum().absrap(), _weight);
         }
       }
-
-
-      _h_AbsPtclDiffXsecTPt[isTop]->fill(pTop.pT(),     event.weight());
-      _h_AbsPtclDiffXsecTY[isTop] ->fill(pTop.absrap(), event.weight());
-      _h_NrmPtclDiffXsecTPt[isTop]->fill(pTop.pT(),     event.weight());
-      _h_NrmPtclDiffXsecTY[isTop] ->fill(pTop.absrap(), event.weight());
-      _h_AbsPtclDiffXsecJPt[isTop]->fill(good_ljets[0].pT(),     event.weight());
-      _h_AbsPtclDiffXsecJY[isTop] ->fill(good_ljets[0].absrap(), event.weight());
-      _h_NrmPtclDiffXsecJPt[isTop]->fill(good_ljets[0].pT(),     event.weight());
-      _h_NrmPtclDiffXsecJY[isTop] ->fill(good_ljets[0].absrap(), event.weight());
 
       //std::cout << "\tcutflow[8]++ \n";
       if(good_electrons.size() == 1) cutflow_ele[8]++;
@@ -445,25 +363,6 @@ namespace Rivet {
     
     // Normalise histograms etc., after the run
     void finalize() {
-      ///+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-  double par[5] = { 1.5, 2.5, 10.0, 20.0, 30.0 };
-
-  double x[2]={0,0};
-  double minimum;
-
-  double xmin[2], xmax[2];
-  unsigned type[2];
-
-  struct multimin_params optim_par = {.1,1e-2,100,1e-3,1e-5,2,0};
-
-  /* unconstrained minimization */
-  multimin(2,x,&minimum,NULL,NULL,NULL,&f,&df,&fdf,(void *) par,optim_par);
-
-  printf("unconstrained minimum %e at x=%e y=%e\n",minimum,x[0],x[1]);
-  ///++++++++++++++++++++++++++++++++++++++++++++++++++
-
       double lum = 20239.3;
       double Br = 0.324;
       cout << "eventcount: " << eventcount << endl;        
@@ -1036,14 +935,10 @@ namespace Rivet {
     vector<Histo1DPtr> _h_ljet_rap_antitop;
     vector<Histo1DPtr> _h_ljet_rap_antitop_norm;
 
-    Histo1DPtr _h_AbsPtclDiffXsecTPt[2], _h_AbsPtclDiffXsecTY[2], _h_NrmPtclDiffXsecTPt[2], _h_NrmPtclDiffXsecTY[2];
-    Histo1DPtr _h_AbsPtclDiffXsecJPt[2], _h_AbsPtclDiffXsecJY[2], _h_NrmPtclDiffXsecJPt[2], _h_NrmPtclDiffXsecJY[2];
-    Histo1DPtr _h_AbsPrtnDiffXsecTPt[2], _h_AbsPrtnDiffXsecTY[2], _h_NrmPrtnDiffXsecTPt[2], _h_NrmPrtnDiffXsecTY[2];
-
     //@}
   };
 
   // This global object acts as a hook for the plugin system
-  AnalysisBuilder<MC_tchan_particle_multimin> plugin_MC_tchan_particle_multimin;
+  AnalysisBuilder<MC_tchan_particle> plugin_MC_tchan_particle;
 
 }
