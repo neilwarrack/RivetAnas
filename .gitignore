@@ -13,7 +13,7 @@
 
 
 # Analysis specific stuff
-#.yoda
+*/Rivet.yoda
 *.hepmc
 *.log
 #*.dat

@@ -9,6 +9,16 @@
 #include "Rivet/Projections/PromptFinalState.hh"
 #include "Rivet/Projections/VetoedFinalState.hh"
 
+// #include "neutrino.h"
+#include "multimin.h"
+
+
+// MINIMIZER CODE FOR NEUTRINOS
+#include "minimizer.h"
+
+
+
+
 namespace Rivet {
 
 
@@ -77,8 +87,9 @@ namespace Rivet {
       DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV);
       declare(dressedLeptons, "Leptons");
 
+      DressedLeptons vetoDressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 10*GeV);
+
       // Jets
-      //FinalState vfs;
       VetoedFinalState vfs;
       vfs.vetoNeutrinos();
       vfs.addVetoOnThisFinalState(dressedLeptons);
@@ -131,15 +142,15 @@ namespace Rivet {
       do { // trick to allow early exit from selection without full return
 
 	//const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
-	const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
+	const Particles& allTops = apply<PartonicTops>(event, "emuLeptonicTops").particles();
         if (allTops.size() != 1) break;
         const Particle& top = allTops[0];
 
         size_t itop = (top.charge() > 0) ? 0 : 1;
-	   _h_AbsPrtnDiffXsecTPt[itop]->fill( allTops[0].pT(),     event.weight());
-	   _h_AbsPrtnDiffXsecTY[itop] ->fill( allTops[0].absrap(), event.weight());
-	   _h_NrmPrtnDiffXsecTPt[itop]->fill( allTops[0].pT(),     event.weight());
-	   _h_NrmPrtnDiffXsecTY[itop] ->fill( allTops[0].absrap(), event.weight());
+	_h_AbsPrtnDiffXsecTPt[itop]->fill( top.pT(),     event.weight());
+	_h_AbsPrtnDiffXsecTY[itop] ->fill( top.absrap(), event.weight());
+	_h_NrmPrtnDiffXsecTPt[itop]->fill( top.pT(),     event.weight());
+	_h_NrmPrtnDiffXsecTY[itop] ->fill( top.absrap(), event.weight());
 
       } while (false);
 
@@ -150,8 +161,8 @@ namespace Rivet {
         // Lepton selection
         const Particles& leps = apply<FinalState>(event, "Leptons").particlesByPt();
         MSG_DEBUG("  #leps = " << leps.size());
-        if (leps.size() != 1) break;
-        MSG_DEBUG("  Passed lepton selection");
+        if (leps.size() < 1) break;
+        MSG_DEBUG("  Passed >1 lepton selection");
         cutflow[1]++;
 	const Particle& lep = leps[0];
 
@@ -185,24 +196,41 @@ namespace Rivet {
         const FourMomentum plb = lep.mom() + bjet.mom();
         if (plb.mass() > 160*GeV) break;
         MSG_DEBUG("  Passed Mlb selection");
-        MSG_DEBUG("  Passed fiducial selection");
         cutflow[5]++;
 
-        // Pseudo-W and pseudo-top
-        const MissingMomentum& mm = apply<MissingMomentum>(event, "MET");
-	double zMisMom = mm.missingMom().z();
-	Vector3 pt3Mis = mm.vectorPt();
-	FourMomentum pLep = lep.mom();
+	// transverse mass cut
+	const MissingMomentum& mm = apply<MissingMomentum>(event, "MET");
+	
+	double delta_phi_lep_met = lep.phi()-mm.missingMom().phi();
+	double tmasslepmet = sqrt(2*lep.pT()*mm.met()*1-cos(delta_phi_lep_met));
+	if (tmasslepmet < 50*GeV) break;
+	MSG_DEBUG("  Passed transverse mass selection");
+	cutflow[6]++;
 
-	FourMomentum pNu = recoNu(pt3Mis, pLep, zMisMom);
+	// lep/jet back-to-back cut
+	double delta_phi_jet1_lep = jets[0].phi() - lep.phi();
+	double back_to_back=40*GeV*(1-(3.14-abs(delta_phi_jet1_lep))/(3.14-1));
+	if (back_to_back < 25*GeV){
+	  if (lep.pT() < 25*GeV) break;
+	} else {
+	  if (lep.pT() < back_to_back) break;
+	}
+        MSG_DEBUG("  Passed lepton-jet back to back cut selection");
+        MSG_DEBUG("  Passed fiducial selection");
+	cutflow[7]++;
 
-	const FourMomentum pW = pLep + pNu;
+
+	// ---------------- top quark reconstruction --------------- //
+	
+	FourMomentum lep_4p = lep.mom();
+	Vector3 mmpt = mm.vectorPt();
+	double mmz = mm.missingMom().z();
+
+	// reconstruct neutrino
+	FourMomentum recoNeutrino = reconstructNeutrino(mmpt, lep_4p, mmz);
+
+	const FourMomentum pW = lep + recoNeutrino;
 	const FourMomentum pTop = pW + bjet.mom();
-
-
-        //const FourMomentum pW = lep.mom() + mm.missingMom();
-	//	const FourMomentum pW = lep.mom() + mm.missingMom();
-	//const FourMomentum pW = lep.mom() + WBoson;
         
 
         // Fill counters and histograms
@@ -250,18 +278,28 @@ namespace Rivet {
       for (int i = 0; i < 9; i++) {
         cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
       }
-    
 
+      // experimentation with minimizer...............................................
+      double x[2]={0,0};
+      double minimum;
+      struct multimin_params optim_par = {.1,1e-2,100,1e-3,1e-5,2,0};
+      double par[5] = { 1.5, 2.5, 10.0, 20.0, 30.0 };
+      multimin(2,x,&minimum,NULL,NULL,NULL,&f,&df,&fdf,(void *) par,optim_par);
+      cout << "minimum = " << minimum << endl;
+      // .............................................................................
     }
 
     //@}
 
 
 
-    FourMomentum recoNu(Vector3& neutrino, FourMomentum& lepton, double z_before) {
-      float wMass = 80.399*GeV; // in GeV
+    FourMomentum reconstructNeutrino(Vector3& neutrino, FourMomentum& lepton, double z_before) {
+
+      float wMass = 80.399*GeV;
       FourMomentum return_neutrino;
+      
       vector<float> pZ = getNeutrinoPzSolutions(neutrino, lepton, wMass);
+      
       int nSolutions = pZ.size();
       if(nSolutions == 2) {
         neutrino.setZ( std::fabs(pZ[0]) < std::fabs(pZ[1]) ? pZ[0] : pZ[1] );
@@ -274,7 +312,7 @@ namespace Rivet {
 	// neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
         // neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
 	neutrino.setZ(z_before);
-	cout << "scaled pT of nu: p_z = " << neutrino.z() << " (Before: " << z_before << ")" << endl;
+	//cout << "scaled pT of nu: p_z = " << neutrino.z() << " (Before: " << z_before << ")" << endl;
 
       } else if(nSolutions == 1) {
         neutrino.setZ(pZ[0]);
@@ -285,13 +323,14 @@ namespace Rivet {
       
 
     vector<float> getNeutrinoPzSolutions(Vector3 & neutrino, FourMomentum& lepton, float wMass) {
+
       vector<float> pz;
       
       float alpha = 0.5 * wMass * wMass + lepton.x() * neutrino.x() + lepton.y() * neutrino.y();
       float pT_lep2 = lepton.perp2();
       float discriminant = lepton.vector3().mod2() * (alpha * alpha - pT_lep2 * neutrino.mod2());
       if (discriminant < 0.){
-	//cout << "WARNING: complex solns to nu_z calc." << endl;
+	cout << "WARNING: complex solns to nu_z calc." << endl;
 	
 	return pz;
       }

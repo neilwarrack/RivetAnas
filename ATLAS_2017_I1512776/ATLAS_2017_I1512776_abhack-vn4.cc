@@ -25,7 +25,7 @@ namespace Rivet {
 
     /// Book histograms and initialise projections before the run
     void init() {
-
+      MSG_DEBUG(" NEIL ");
       // For parton level analysis
       declare(PartonicTops(PartonicTops::E_MU), "emuLeptonicTops");
       declare(PartonicTops(PartonicTops::E_MU_TAU), "LeptonicTops");
@@ -127,6 +127,7 @@ namespace Rivet {
     /// Perform the per-event analysis
     void analyze(const Event& event) {
 
+      MSG_DEBUG(" NEIL ");
 
       // PARTON-LEVEL ANALYSIS
       do { // trick to allow early exit from selection without full return
