@@ -405,7 +405,7 @@ namespace Rivet {
     
     // Normalise histograms etc., after the run
     void finalize() {
-      cout << "finalizing ATLAS_2017_I1512776_with_histos.cc";
+      cout << "finalizing ATLAS_2017_I1512776_with_histos.cc" << endl;
       double lum = 20239.3;
       double Br = 0.324;
       cout << "eventcount: " << eventcount << endl;        
