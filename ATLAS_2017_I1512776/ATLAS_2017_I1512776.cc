@@ -11,12 +11,11 @@
 
 // #include "neutrino.h"
 #include "multimin.h"
-
-
-// MINIMIZER CODE FOR NEUTRINOS
 #include "minimizer.h"
 
 
+
+inline double sqrd(double x) { return x*x; }
 
 
 namespace Rivet {
@@ -279,27 +278,24 @@ namespace Rivet {
         cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
       }
 
-      // experimentation with minimizer...............................................
-      double x[2]={0,0};
-      double minimum;
-      struct multimin_params optim_par = {.1,1e-2,100,1e-3,1e-5,2,0};
-      double par[5] = { 1.5, 2.5, 10.0, 20.0, 30.0 };
-      multimin(2,x,&minimum,NULL,NULL,NULL,&f,&df,&fdf,(void *) par,optim_par);
-      cout << "minimum = " << minimum << endl;
-      // .............................................................................
+      
     }
 
     //@}
 
 
 
-    FourMomentum reconstructNeutrino(Vector3& neutrino, FourMomentum& lepton, double z_before) {
+    FourMomentum reconstructNeutrino(Vector3& mmpt, FourMomentum& lepton, double z_before) {
 
       float wMass = 80.399*GeV;
       FourMomentum return_neutrino;
+
+      Vector3 neutrino;
+      neutrino.setX(mmpt.x());
+      neutrino.setY(mmpt.y());
       
-      vector<float> pZ = getNeutrinoPzSolutions(neutrino, lepton, wMass);
-      
+      vector<float> pZ = getNeutrinoPzSolutions(mmpt, lepton, wMass);
+      //cout << "pz=" << pZ << endl;      
       int nSolutions = pZ.size();
       if(nSolutions == 2) {
         neutrino.setZ( std::fabs(pZ[0]) < std::fabs(pZ[1]) ? pZ[0] : pZ[1] );
@@ -311,9 +307,115 @@ namespace Rivet {
 	// 		   - neutrino.y()*lepton.y());
 	// neutrino *= wMass*wMass/mTSq; // Scale down pt(nu) such that there is exactly 1 solution
         // neutrino.setZ(neutrino.mod()/lepton.pT()*lepton.pz()); // p_nuT adjustment approach
-	neutrino.setZ(z_before);
+
+
+	
+
+	
+	//cout << "  z of missing momentum:" << z_before << endl;
 	//cout << "scaled pT of nu: p_z = " << neutrino.z() << " (Before: " << z_before << ")" << endl;
 
+
+	// minimizer....................................................................
+	
+	double m_W = 80.4;
+	double upper, lower, initial;
+	
+	if(lepton.x() < 0) {
+	  upper = - m_W*m_W/(4*lepton.x()) -0.01;
+	  lower = -9999.;
+	}
+
+	else if(lepton.x() == 0) {
+	  upper =  9999.;
+	  lower = -9999.;
+	}
+
+	else {
+	  upper = 9999.;
+	  lower = - m_W*m_W/(4*lepton.x()) +0.01;
+	}
+
+	if(mmpt.x() > upper) initial = upper -1;
+	else if(mmpt.x() < lower) initial = lower + 1;
+	else initial = mmpt.x();
+
+	// minimizer debug______________________________________________________________
+
+
+	
+	//cout << "minimizer lepton inputs:" << endl << "lep.pt=" << lepton.pt() << "  lep.x=" << lepton.x() << "  lep.y=" << lepton.y() << "  met.x=" << mmpt.x() << "  met.y=" << mmpt.y() << endl;
+	
+
+
+	
+
+	  //sqrd(m_W)*p[2] + 2*p[1]*p[2]*x[0] +
+	  //m_W*p[0]*
+	  //sqrt(sqrd(m_W) + 4*p[1]*x[0]); // /(2*sqrd(p[1])) - p[4] << endl;
+	//cout << endl;
+	// _____________________________________________________________________________
+
+	//cout << "start value of x[0]=" << x[0] << endl;
+	double delta_1, delta_2;
+	struct multimin_params optim_par = {.1,1e-2,1000,1e-3,1e-5,1,0};
+	
+	bool x1_nan = false;
+	bool x2_nan = false;
+	
+	double par[5] = { lepton.pt(), lepton.x(),lepton.y(), mmpt.x(), mmpt.y()};
+	//	multimin(1,x,&minimum,NULL,NULL,NULL,&f,&df,&fdf,(void *) par,optim_par);
+	//cout << "  x[0]_i  = " << x[0] << endl;
+	double x_1[1];
+	double x_2[1];
+	x_1[0] = initial;
+	x_2[0] = initial;
+
+
+	double p[5]={lepton.pt(),lepton.x(),lepton.y(), mmpt.x(), mmpt.y()};
+
+	//cout << "DEGBUG:" << endl ;
+	double fnVal_1 = sqrt(pow( x_1[0]-p[3] ,2) + pow( (sqrd(m_W)*p[2] + 2*p[1]*p[2]*x_1[0] + m_W*p[0]*sqrt(sqrd(m_W) + 4*p[1]*x_1[0]))/(2*sqrd(p[1])) - p[4],2));
+	double fnVal_2 = sqrt(pow( x_2[0]-p[3] ,2) + pow( (sqrd(m_W)*p[2] + 2*p[1]*p[2]*x_2[0] - m_W*p[0]*sqrt(sqrd(m_W) + 4*p[1]*x_2[0]))/(2*sqrd(p[1])) - p[4],2));
+
+	
+	multimin(1,x_1,&delta_1,NULL,&lower,&upper,&f,&df,&fdf,(void *) par,optim_par);
+
+	if (x_1[0] != x_1[0]) {
+	  x1_nan = true;
+	  // cout << "  function value = " << fnVal_1  << endl;
+	  // cout << "  met.x()        = " << mmpt.x() << endl;
+	  // cout << "  minimum        = " << delta_1  << endl;
+	  // cout << "  initial        = " << initial  << endl;
+	  // cout << "  final          = " << x_1[0]   << endl;
+	  // cout << "  lower          = " << lower    << endl;
+	  // cout << "  upper          = " << upper    << endl;
+	}
+	
+	multimin(1,x_2,&delta_2,NULL,&lower,&upper,&f2,&df2,&f2df2,(void *) par,optim_par);
+
+	if (x_2[0] != x_2[0]) {
+	  x2_nan = true;
+	  // cout << "  function value = " << fnVal_2  << endl;
+	  // cout << "  met.x()        = " << mmpt.x() << endl;
+	  // cout << "  minimum        = " << delta_2  << endl;
+	  // cout << "  initial        = " << initial  << endl;
+	  // cout << "  final          = " << x_2[0]   << endl;
+	  // cout << "  lower          = " << lower    << endl;
+	  // cout << "  upper          = " << upper    << endl;
+	}
+	
+	if (x2_nan && x1_nan) {cout << "######################" << endl;}
+	if (!x2_nan && !x2_nan){
+	  if (x_1[0] < x_2[0]){
+	    neutrino.setZ(??)  
+	  } else {
+
+	  }
+	}
+	
+	// .............................................................................
+	
       } else if(nSolutions == 1) {
         neutrino.setZ(pZ[0]);
       }
@@ -330,10 +432,10 @@ namespace Rivet {
       float pT_lep2 = lepton.perp2();
       float discriminant = lepton.vector3().mod2() * (alpha * alpha - pT_lep2 * neutrino.mod2());
       if (discriminant < 0.){
-	cout << "WARNING: complex solns to nu_z calc." << endl;
-	
+
 	return pz;
       }
+      //cout << "non-complex solutions found" << endl;
       
       float pz_offset = alpha * lepton.z() / pT_lep2;
       
@@ -353,6 +455,8 @@ namespace Rivet {
       
       return pz;
     }
+
+
     
 
 
