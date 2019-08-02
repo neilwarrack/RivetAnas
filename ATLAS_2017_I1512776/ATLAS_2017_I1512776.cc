@@ -82,8 +82,7 @@ namespace Rivet {
       //////////////END///////////////////////////////////////////////////////////////////
 
       // MY REWORKING OF THE ABOVE CODE///////////////////////////////////////////////////
-      FinalState fs;
-      Cut fs_w = Cuts::abseta < 2.5 && Cuts::pT > 15*GeV;
+     
 
       // Leptons
       /*
@@ -95,12 +94,16 @@ namespace Rivet {
       declare(dressedleptons, "Leptons");
       */
       //DressedLeptons vetoDressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 10*GeV);
-
+      
+      FinalState fs;
+      Cut fs_w = Cuts::abseta < 2.5 && Cuts::pT > 15*GeV;
       // new attempt at dressed leptons
       // Lepton cuts
-      Cut FS_Wlept = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
+      //Cut FS_Wlept = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
+      Cut FS_Wlept = Cuts::pT > 1*GeV;
       // Electrons and muons in Fiducial PS
-      PromptFinalState leptons(FinalState(fs_w && (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON)));
+      //PromptFinalState leptons(FinalState(fs_w && (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON)));
+      PromptFinalState leptons(FinalState(Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON));
       leptons.acceptTauDecays(true);
       // Get photons to dress leptons
       PromptFinalState photons(Cuts::abspid == PID::PHOTON);
@@ -190,13 +193,19 @@ namespace Rivet {
 	cutflow[0]++;
         // Lepton selection
         const Particles& leps = apply<FinalState>(event, "Leptons").particlesByPt();
-	const Particles& neutrinos = apply<PromptFinalState>(event, "Neutrinos").particlesByPt();
-	cout << endl << "leps = " << leps.size();
+
+
         MSG_DEBUG("  #leps = " << leps.size());
         if (leps.size() < 1) break;
         MSG_DEBUG("  Passed >1 lepton selection");
         cutflow[1]++;
 	const Particle& lep = leps[0];
+
+	//Cut FS_Wlept = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
+	if (lep.abseta() > 2.5) break;
+	cutflow[2]++;
+	if (lep.pT() < 25*GeV) break;
+	cutflow[3]++;
 
         // Jet selection
         const Jets jets = apply<JetAlg>(event, "Jets").jetsByPt(Cuts::abseta < 4.5 && Cuts::pT > 30*GeV);
@@ -208,9 +217,9 @@ namespace Rivet {
           if (j.abseta() < 2.5 && j.bTagged(Cuts::pT > 5*GeV)) bjets += j; else ljets += j;
        	}
 	if (bjets.size() != 1) {MSG_DEBUG("N_bjets (w pT>5GeV) = " << bjets.size()); break;}
-	cutflow[2]++;
+	cutflow[4]++;
 	if (ljets.size() != 1) {MSG_DEBUG("N_ljets = " << ljets.size()); break;}
-	cutflow[3]++;	
+	cutflow[5]++;	
 	//if (bjets.size() != 1 || ljets.size() != 1) break;
         MSG_DEBUG("  Passed jet selection");
         
@@ -222,13 +231,13 @@ namespace Rivet {
         // Lepton-jet isolation cut
         if (any(jets, deltaRLess(lep, 0.4))) break;
         MSG_DEBUG("  Passed jet isolation cuts");
-	cutflow[4]++;
+	cutflow[6]++;
 
         // Mlb cut
         const FourMomentum plb = lep.mom() + bjet.mom();
         if (plb.mass() > 160*GeV) break;
         MSG_DEBUG("  Passed Mlb selection");
-        cutflow[5]++;
+        cutflow[7]++;
 
 	// transverse mass cut
 	const MissingMomentum& mm = apply<MissingMomentum>(event, "MET");
@@ -238,7 +247,7 @@ namespace Rivet {
 	double tmasslepmet = sqrt(2*lep.pT()*mm.met()*(1-cos(delta_phi_lep_met)));
 	if (tmasslepmet < 50*GeV) break;
 	MSG_DEBUG("  Passed transverse mass selection");
-	cutflow[6]++;
+	cutflow[8]++;
 
 	// lep/jet back-to-back cut
 	double delta_phi_jet1_lep = jets[0].phi() - lep.phi();
@@ -250,11 +259,11 @@ namespace Rivet {
 	}
         MSG_DEBUG("  Passed lepton-jet back to back cut selection");
         MSG_DEBUG("  Passed fiducial selection");
-	cutflow[7]++;
+	cutflow[9]++;
 
 
 	// ---------------- top quark reconstruction --------------- //
-
+	cout << "Passed fiducial selection, reconstructing neutrino, then W, then top:" << endl;
 	
 	FourMomentum lep_4p = lep.mom();
 	Vector3 mmpt = mm.vectorMissingPt();
@@ -270,7 +279,7 @@ namespace Rivet {
 	//      << mm.missingMomentum().x() << ", "
 	//      << mm.missingMomentum().y() << ", "
 	//      << mm.missingMomentum().z() << ")" << endl;
-
+	const Particles& neutrinos = apply<PromptFinalState>(event, "Neutrinos").particlesByPt();
 	for (const Particle &neutrino : neutrinos){
 	  cout << "neutrino     : ("
 	       << neutrino.mom().x() << ", "
@@ -283,6 +292,7 @@ namespace Rivet {
 	     << recoNeutrino.z() << ")" << endl;
 
 	// differenence of reco-nu and nu z momentum
+
 	_c_reco_nuCtr += 1;
 	_c_reco_nuZ_diff += abs(neutrinos[0].mom().z() - recoNeutrino.z());
 	_c_abs_nuZ += abs(neutrinos[0].mom().z());
@@ -357,10 +367,21 @@ namespace Rivet {
       normalize(_h_NrmPrtnDiffXsecTY[i]);
       }
 
-      // Print cutflows
+      // Print generic cutflow info
       for (int i = 0; i < 9; i++) {
-        cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
+        //cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
       }
+      
+      // Print detailed cutflow details
+      cout << "Cutflow: exactly 1 e or mu (dressed): " << cutflow[1] <<" Afid: "<<(float)cutflow[1]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lepton eta < 2.5 cut       : " << cutflow[2] <<" Afid: "<<(float)cutflow[2]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lepton pt < 25*GeV cut     : " << cutflow[3] <<" Afid: "<<(float)cutflow[3]/(float)cutflow[0] << endl;
+      cout << "Cutflow: N_btaggedjets != 1         : " << cutflow[4] <<" Afid: "<<(float)cutflow[4]/(float)cutflow[0] << endl;
+      cout << "Cutflow: N_light_jets  != 1         : " << cutflow[5] <<" Afid: "<<(float)cutflow[5]/(float)cutflow[0] << endl;
+      cout << "Cutflow: jet isolation (deltaR<0.4) : " << cutflow[6] <<" Afid: "<<(float)cutflow[6]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lep bjet mass cut          : " << cutflow[7] <<" Afid: "<<(float)cutflow[7]/(float)cutflow[0] << endl;
+      cout << "Cutflow: Tmass_lmet cut             : " << cutflow[8] <<" Afid: "<<(float)cutflow[8]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lepton jet back-to-bck cut : " << cutflow[9] <<" Afid: "<<(float)cutflow[9]/(float)cutflow[0] << endl;
 
       
     }
