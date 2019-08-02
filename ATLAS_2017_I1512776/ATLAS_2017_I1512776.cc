@@ -82,20 +82,37 @@ namespace Rivet {
       //////////////END///////////////////////////////////////////////////////////////////
 
       // MY REWORKING OF THE ABOVE CODE///////////////////////////////////////////////////
+      FinalState fs;
+      Cut fs_w = Cuts::abseta < 2.5 && Cuts::pT > 15*GeV;
+
       // Leptons
+      /*
       Cut lep_cuts = Cuts::abseta < 2.5 
 	&& (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON);
       PromptFinalState bareLeptons(lep_cuts,true); // 'true' accepts tau decays
       IdentifiedFinalState photons(Cuts::abseta < 2.6 && Cuts::abspid == PID::PHOTON);
-      DressedLeptons dressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV);
-      declare(dressedLeptons, "Leptons");
+      DressedLeptons dressedleptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV);
+      declare(dressedleptons, "Leptons");
+      */
+      //DressedLeptons vetoDressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 10*GeV);
 
-      DressedLeptons vetoDressedLeptons(photons, bareLeptons, 0.1, Cuts::abseta < 2.5 && Cuts::pT > 10*GeV);
+      // new attempt at dressed leptons
+      // Lepton cuts
+      Cut FS_Wlept = Cuts::abseta < 2.5 && Cuts::pT > 25*GeV;
+      // Electrons and muons in Fiducial PS
+      PromptFinalState leptons(FinalState(fs_w && (Cuts::abspid == PID::ELECTRON || Cuts::abspid == PID::MUON)));
+      leptons.acceptTauDecays(true);
+      // Get photons to dress leptons
+      PromptFinalState photons(Cuts::abspid == PID::PHOTON);
+      DressedLeptons dressedleptons(photons, leptons, 0.1, FS_Wlept, true);
+      declare(dressedleptons, "Leptons");
 
+
+      
       // Jets
       VetoedFinalState vfs;
       vfs.vetoNeutrinos();
-      vfs.addVetoOnThisFinalState(dressedLeptons);
+      vfs.addVetoOnThisFinalState(dressedleptons);
       FastJets jets(vfs, FastJets::ANTIKT, 0.4);
       jets.useInvisibles();
       declare(jets, "Jets");
@@ -174,7 +191,7 @@ namespace Rivet {
         // Lepton selection
         const Particles& leps = apply<FinalState>(event, "Leptons").particlesByPt();
 	const Particles& neutrinos = apply<PromptFinalState>(event, "Neutrinos").particlesByPt();
-
+	cout << endl << "leps = " << leps.size();
         MSG_DEBUG("  #leps = " << leps.size());
         if (leps.size() < 1) break;
         MSG_DEBUG("  Passed >1 lepton selection");
@@ -322,8 +339,8 @@ namespace Rivet {
       double lepBR = 0.29;  // branching ratio of W->ee/mumu/emu (via taus included)
 
       for (int i = 0; i < 2; i++) {
-	if (i == 0) lepBR = 0.29*2.0/3.0; // top
-	if (i == 1) lepBR = 0.29*1.0/3.0; // anti-top
+	//if (i == 0) lepBR = 0.29*2.0/3.0; // top
+	//if (i == 1) lepBR = 0.29*1.0/3.0; // anti-top
       scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
       scale( _h_AbsPtclDiffXsecTY[i],  crossSection()/sumOfWeights() / lepBR );
       normalize(_h_NrmPtclDiffXsecTPt[i]);
