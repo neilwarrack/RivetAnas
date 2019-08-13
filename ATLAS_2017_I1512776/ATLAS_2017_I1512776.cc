@@ -20,7 +20,7 @@ namespace Rivet {
   double nuy1(const double, const double, const double , const double );
   double nuy2(const double, const double, const double , const double );
   double rand01();
-  FourMomentum reconstructNeutrino(Vector3&, FourMomentum&);
+  Vector3 reconstructNeutrino(Vector3&, FourMomentum&);
   Vector3 getNuXY(Vector3&, FourMomentum&, float, bool* is_complex );
 
   
@@ -263,47 +263,38 @@ namespace Rivet {
 
 
 	// ---------------- top quark reconstruction --------------- //
-	cout << "Passed fiducial selection, reconstructing neutrino, then W, then top:" << endl;
+        MSG_DEBUG("  #Passed fiducial selection, reconstructing neutrino, then W, then top:");
+
 	
 	FourMomentum lep_4p = lep.mom();
 	Vector3 mmpt = mm.vectorMissingPt();
 	
 	// reconstruct neutrino
 	Vector3 recoNeutrino = reconstructNeutrino(mmpt, lep_4p);
-	//cout << neutrinos.size() << " neutrinos in record" << endl;
-
-	// You have reconstructed a neutrino!
-	// Print some stuff!
 	
-	// cout << "missingMom() : ("
-	//      << mm.missingMomentum().x() << ", "
-	//      << mm.missingMomentum().y() << ", "
-	//      << mm.missingMomentum().z() << ")" << endl;
+	// You have reconstructed a neutrino!
+	// Print some stuff about the real (prompt) neutrinos (by pT) in event
 	const Particles& neutrinos = apply<PromptFinalState>(event, "Neutrinos").particlesByPt();
 	for (const Particle &neutrino : neutrinos){
-	  cout << "neutrino     : ("
-	       << neutrino.mom().x() << ", "
-	       << neutrino.mom().y() << ", "
-	       << neutrino.mom().z() << ")" << endl;
+	  MSG_DEBUG("neutrino     : (" << neutrino.mom().x()<< ", " << neutrino.mom().y() << ", " << neutrino.mom().z() << ")");
 	}
-	cout << "reco-nu      : ("
-	     << recoNeutrino.x() << ", "
-	     << recoNeutrino.y() << ", "
-	     << recoNeutrino.z() << ")" << endl;
+	// Print some stuff about the reconstructed neutrino in event
+	MSG_DEBUG("reco-nu      : (" << recoNeutrino.x() << ", " << recoNeutrino.y() << ", " << recoNeutrino.z() << ")");
 
-	// differenence of reco-nu and nu z momentum
 
-	_c_reco_nuCtr += 1;
+	// record some info to calculate the average differenence of reco-nu and nu z momenta
+	_c_reco_nuCtr    += 1;
 	_c_reco_nuZ_diff += abs(neutrinos[0].mom().z() - recoNeutrino.z());
-	_c_abs_nuZ += abs(neutrinos[0].mom().z());
-	_c_abs_reco_nuZ += abs(recoNeutrino.z());
-	//cout << "_c_abs_reco_nuZ = " << _c_abs_reco_nuZ << endl;
-
+	_c_abs_nuZ       += abs(neutrinos[0].mom().z());
+	_c_abs_reco_nuZ  += abs(recoNeutrino.z());
+	
+	// Check that nu reco has worked
 	if (recoNeutrino.dot(recoNeutrino) == 0.0) {
-	  MSG_DEBUG("VETO DUE TO BAD NEUTRINO RECO");
+	  //MSG_ERROR("VETO DUE TO BAD NEUTRINO RECO");
 	  vetoEvent;
 	}
-	
+
+	// convert reconstructed neutrino momenta to a 4vector with zero mass.
 	FourMomentum pNeutrino;
 	pNeutrino.setPM(recoNeutrino.x(), recoNeutrino.y(), recoNeutrino.z(), 0.0);
 
@@ -311,7 +302,7 @@ namespace Rivet {
 	const FourMomentum pTop = pW + bjet.mom();
         
 
-        // Fill counters and histograms
+        // Fill particle-level fiducial differential distributions
         size_t itop = (lep.charge() > 0) ? 0 : 1;
         _h_AbsPtclDiffXsecTPt[itop]->fill( pTop.pT(),     event.weight());
 	_h_AbsPtclDiffXsecTY[itop] ->fill( pTop.absrap(), event.weight());
@@ -324,64 +315,62 @@ namespace Rivet {
 	
       } while (false); //< just one iteration
 
-
-      
-
-
-
     }
 
 
-    /// Normalise histograms etc., after the run
+    /// Normalise histograms and print info after the run
     void finalize() {
 
       // some debug print out
-      cout << "Average difference of real neutrino z mom and reconstructed neutrino z mom: "
+      cout << "Average difference between leading MC neutrino" << endl;
+      cout << "z momentum and reconstructed neutrino z momentum: "
 	   << _c_reco_nuZ_diff / _c_reco_nuCtr << endl;
-      cout << "Average abs val of real neutrino z : "
+      cout << "Average abs value of real leading MC neutrino z : "
 	   << _c_abs_nuZ / _c_reco_nuCtr << endl;
-      cout << "Average abs val of reco-nu.z() : "
+      cout << "Average abs value of reconstructed neutrino z   : "
 	   << _c_abs_reco_nuZ / _c_reco_nuCtr << endl;
 
       
 
       //double lepBR = 0.324; //branching ratio of W->lepton
-      double lepBR = 0.29;  // branching ratio of W->ee/mumu/emu (via taus included)
+      double lepBR = 0.29;  // branching ratio of W->e/mu (via taus also included)
 
+      //double A_fid = 0.175; // Roughly. From paper.
       for (int i = 0; i < 2; i++) {
-	//if (i == 0) lepBR = 0.29*2.0/3.0; // top
-	//if (i == 1) lepBR = 0.29*1.0/3.0; // anti-top
-      scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
-      scale( _h_AbsPtclDiffXsecTY[i],  crossSection()/sumOfWeights() / lepBR );
-      normalize(_h_NrmPtclDiffXsecTPt[i]);
-      normalize(_h_NrmPtclDiffXsecTY[i]);
-      //
-      scale( _h_AbsPtclDiffXsecJPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
-      scale( _h_AbsPtclDiffXsecJY[i],  crossSection()/sumOfWeights() / lepBR );
-      normalize(_h_NrmPtclDiffXsecJPt[i]);
-      normalize(_h_NrmPtclDiffXsecJY[i]);
-      //
-      scale(_h_AbsPrtnDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights()/lepBR );
-      scale(_h_AbsPrtnDiffXsecTY[i],  crossSection() / sumOfWeights() / lepBR );
-      normalize(_h_NrmPrtnDiffXsecTPt[i]);
-      normalize(_h_NrmPrtnDiffXsecTY[i]);
+
+      // Fiducial particle-level distributions (tops)
+      //scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
+	scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() );
+	scale( _h_AbsPtclDiffXsecTY[i],  crossSection()/sumOfWeights() / lepBR );
+	normalize(_h_NrmPtclDiffXsecTPt[i]);
+	normalize(_h_NrmPtclDiffXsecTY[i]);
+	// Fiducial particle-level distributions (jets)
+	scale( _h_AbsPtclDiffXsecJPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
+	scale( _h_AbsPtclDiffXsecJY[i],  crossSection()/sumOfWeights() / lepBR );
+	normalize(_h_NrmPtclDiffXsecJPt[i]);
+	normalize(_h_NrmPtclDiffXsecJY[i]);
+	// Full phase-space parton level results (tops)
+	scale(_h_AbsPrtnDiffXsecTPt[i], crossSection()/ femtobarn/ sumOfWeights()/ lepBR );
+	scale(_h_AbsPrtnDiffXsecTY[i],  crossSection() / sumOfWeights() / lepBR );
+	normalize(_h_NrmPrtnDiffXsecTPt[i]);
+	normalize(_h_NrmPrtnDiffXsecTY[i]);
       }
 
       // Print generic cutflow info
       for (int i = 0; i < 9; i++) {
-        //cout << "Cutflow at step " << i << ": " << cutflow[i]<<" Afid: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
+        //cout << "Cutflow at step " << i << ": " << cutflow[i]<<" ratio: "<<(float)cutflow[i]/(float)cutflow[0] << endl;
       }
       
       // Print detailed cutflow details
-      cout << "Cutflow: exactly 1 e or mu (dressed): " << cutflow[1] <<" Afid: "<<(float)cutflow[1]/(float)cutflow[0] << endl;
-      cout << "Cutflow: lepton eta < 2.5 cut       : " << cutflow[2] <<" Afid: "<<(float)cutflow[2]/(float)cutflow[0] << endl;
-      cout << "Cutflow: lepton pt < 25*GeV cut     : " << cutflow[3] <<" Afid: "<<(float)cutflow[3]/(float)cutflow[0] << endl;
-      cout << "Cutflow: N_btaggedjets != 1         : " << cutflow[4] <<" Afid: "<<(float)cutflow[4]/(float)cutflow[0] << endl;
-      cout << "Cutflow: N_light_jets  != 1         : " << cutflow[5] <<" Afid: "<<(float)cutflow[5]/(float)cutflow[0] << endl;
-      cout << "Cutflow: jet isolation (deltaR<0.4) : " << cutflow[6] <<" Afid: "<<(float)cutflow[6]/(float)cutflow[0] << endl;
-      cout << "Cutflow: lep bjet mass cut          : " << cutflow[7] <<" Afid: "<<(float)cutflow[7]/(float)cutflow[0] << endl;
-      cout << "Cutflow: Tmass_lmet cut             : " << cutflow[8] <<" Afid: "<<(float)cutflow[8]/(float)cutflow[0] << endl;
-      cout << "Cutflow: lepton jet back-to-bck cut : " << cutflow[9] <<" Afid: "<<(float)cutflow[9]/(float)cutflow[0] << endl;
+      cout << "Cutflow: exactly 1 e or mu (dressed): " << cutflow[1] <<" ratio: "<<(float)cutflow[1]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lepton eta < 2.5 cut       : " << cutflow[2] <<" ratio: "<<(float)cutflow[2]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lepton pt < 25*GeV cut     : " << cutflow[3] <<" ratio: "<<(float)cutflow[3]/(float)cutflow[0] << endl;
+      cout << "Cutflow: N_btaggedjets != 1         : " << cutflow[4] <<" ratio: "<<(float)cutflow[4]/(float)cutflow[0] << endl;
+      cout << "Cutflow: N_light_jets  != 1         : " << cutflow[5] <<" ratio: "<<(float)cutflow[5]/(float)cutflow[0] << endl;
+      cout << "Cutflow: jet isolation (deltaR<0.4) : " << cutflow[6] <<" ratio: "<<(float)cutflow[6]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lep bjet mass cut          : " << cutflow[7] <<" ratio: "<<(float)cutflow[7]/(float)cutflow[0] << endl;
+      cout << "Cutflow: Tmass_lmet cut             : " << cutflow[8] <<" ratio: "<<(float)cutflow[8]/(float)cutflow[0] << endl;
+      cout << "Cutflow: lepton jet back-to-bck cut : " << cutflow[9] <<" ratio: "<<(float)cutflow[9]/(float)cutflow[0] << endl;
 
       
     }
@@ -413,48 +402,46 @@ namespace Rivet {
   };
 
 
-    FourMomentum reconstructNeutrino(Vector3& mmpt, FourMomentum& lepton) {
+  Vector3 reconstructNeutrino(Vector3& mmpt, FourMomentum& lepton) {
 
       float wMass = 80.399*GeV;
       bool is_complex = false;
+
+      // get x and y momentum values for the reconstructed neutrino
       Vector3 reco_nu = getNuXY(mmpt, lepton, wMass, &is_complex);
 
+      // get z momentum value for recostructed neutrino
       double mu  = (wMass*wMass)/2 + reco_nu.x()*lepton.x() + reco_nu.y()*lepton.y();
-      //cout << "mu  = " << mu << endl;
       double mu2 = pow(mu,2);
-      //cout << "mu2 = " << mu2 << endl;
       double nupt2 = reco_nu.x()*reco_nu.x() + reco_nu.y()*reco_nu.y();
+
+      // define new neutrino z
       double nuz = mu*lepton.z()/pow(lepton.pt(),2);
 
+      // if there are one or two non-complex solutions then over-write the
+      // new nu z momentum value ('nuz') given above.
       if (!is_complex){
-	
 	double second_term = mu2*pow(lepton.z(),2)/pow(lepton.pt(),4) - (pow(lepton.E(),2)*nupt2 - mu2)/pow(lepton.pt(),2);
-	//cout << "second_term = " << second_term << endl;
 	
 	if(second_term < 0) {
-	  cout << "ERROR: COMPLEX! THIS SHOULDN'T HAPPEN!";
-
+	  //MSG_ERROR("ERROR: COMPLEX SOLUTION - THIS SHOULDN'T HAPPEN!");
 	} else {
 	  
           double root = sqrt(second_term);
 
-	  // take smallest val (from analysers original rivet code)
+	  // take smallest val (from analysers original rivet code, not mentioned in int note)
 	  double soln1 = nuz + root;
 	  double soln2 = nuz - root;
 	  if (abs(soln1) <= abs(soln2)) nuz = soln1; else nuz = soln2;
-
-	  cout << "solutions for nu z: " << soln1 << ", " << soln2 << " (choosing smaller abs val)" << endl;
-
+	  //MSG_DEBUG("solutions for nu z: " << soln1 << ", " << soln2 << " (choosing smaller abs val)");
 	}
-
       }
 
-      FourMomentum return_neutrino;
-      return_neutrino.setPM(reco_nu.x(), reco_nu.y(), nuz, 0.0);
+      
+      reco_nu.setZ(nuz);
+      return reco_nu;
 
-      return return_neutrino;
-
-    }
+  }
 
 
   
