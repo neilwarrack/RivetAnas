@@ -1,0 +1,49 @@
+Name: ATLAS_2018_I1646686
+Year: 2018
+Summary: All-hadronic boosted ttbar at 13 TeV
+Experiment: ATLAS
+Collider: LHC
+InspireID: 1646686
+Status: VALIDATED
+Authors:
+ - Kyle Cormier <kyle.cormier@cern.ch>
+ - Christian Gutschow <chris.g@cern.ch>
+References:
+ - doi:10.17182/hepdata.81709.v1
+ - arXiv:1801.02052 [hep-ex]
+Keywords:
+ - TTBAR
+ - ALLHADRONIC
+ - BOOSTED
+RunInfo:
+  p + p -> ttbar (all-hadronic, boosted)
+Luminosity_fb: 36.1
+Beams: [p+, p+]
+Energies: [13000]
+PtCuts: [500,350]
+NeedCrossSection: True
+Description:
+  'Measurements are made of differential cross-sections of highly boosted pair-produced top quarks as a function of top-quark and
+  $t\bar{t}$ system kinematic observables using proton--proton collisions at a center-of-mass energy of $\sqrt{s}=13$ TeV. The data 
+  set corresponds to an integrated luminosity of 36.1 fb${}^{-1}$, recorded in 2015 and 2016 with the ATLAS detector at the CERN 
+  Large Hadron Collider. Events with two large-radius jets in the final state, one with transverse momentum pT>500 GeV and a second 
+  with $p_\text{T} > 350$ GeV, are used for the measurement. The top-quark candidates are separated from the multijet background 
+  using jet substructure information and association with a $b$-tagged jet. The measured spectra are corrected for detector effects 
+  to a particle-level fiducial phase space and a parton-level limited phase space, and are compared to several Monte Carlo simulations 
+  by means of calculated $\chi^2$ values. The cross-section for $t\bar{t}$ production in the fiducial phase-space region is 
+  292$\pm$7 (stat)$\pm$76(syst) fb, to be compared to the theoretical prediction of 384$\pm$36 fb.'
+BibKey: Aaboud:2018eqg
+BibTeX: '@article{Aaboud:2018eqg,
+      author         = "Aaboud, Morad and others",
+      title          = "{Measurements of $t\bar{t}$ differential cross-sections
+                        of highly boosted top quarks decaying to all-hadronic
+                        final states in $pp$ collisions at $\sqrt{s}=13\,$ TeV
+                        using the ATLAS detector}",
+      collaboration  = "ATLAS",
+      year           = "2018",
+      eprint         = "1801.02052",
+      archivePrefix  = "arXiv",
+      primaryClass   = "hep-ex",
+      reportNumber   = "CERN-EP-2017-226",
+      SLACcitation   = "%%CITATION = ARXIV:1801.02052;%%"
+}'
