@@ -203,6 +203,8 @@ parameters. The members are
 
 #include "multimin.h"
 
+
+
 struct g_params {
   size_t n;
   const unsigned *type;
@@ -225,7 +227,7 @@ void *multimin_alloc(size_t size){
 }
 
 static double g(const gsl_vector *y,void *gparams){
-
+  gsl_error_handler_t * gsl_set_error_handler_off();
   struct g_params *p= (struct g_params *) gparams;
   
   size_t i;
@@ -530,7 +532,7 @@ multimin(size_t n,double *x,double *fun,
 	 void *fparams,
 	 const struct multimin_params oparams)
 {
-
+  gsl_error_handler_t * gsl_set_error_handler_off();
   size_t i;
   double dtmp1;
 

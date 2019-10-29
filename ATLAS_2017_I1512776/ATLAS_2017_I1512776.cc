@@ -11,6 +11,7 @@
 
 #include "MendelMin.h"
 
+using namespace std;
 
 namespace Rivet {
 
@@ -39,17 +40,18 @@ namespace Rivet {
     void init() {
 
       // For parton level analysis
-      declare(PartonicTops(PartonicTops::ALL     ),  "AllPartonicTops");
-      declare(PartonicTops(PartonicTops::E_MU    ),  "emuLeptonicTops");
-      declare(PartonicTops(PartonicTops::E_MU_TAU),     "LeptonicTops");
+      declare(PartonicTops(PartonicTops::DecayMode::ALL), "AllPartonicTops");
+      declare(PartonicTops(PartonicTops::DecayMode::E_MU), "EmuLeptonicTops");
+      declare(PartonicTops(PartonicTops::DecayMode::E_MU_TAU),"LeptonicTops");
 
 
       // Leptons, jets and MET
       //declare(DressedLeptons(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 25*GeV), "Leptons");
       //DressedLeptons dressedLeps(PromptFinalState(Cuts::abseta < 2.6), 0.1, Cuts::abseta < 2.5 && Cuts::pT > 20*GeV);
 
-
-      // direct copy (with lines missing) from single top groups rivet///////////////////
+      ////////////////////////////////////////////////////////////////////////////////////
+      //// What follows is a direct copy (with lines missing) from single top groups rivet
+      //
       // Cut lep_cuts = (Cuts::abseta < 2.5) && (Cuts::pT >= 20*GeV);      
       // // All final state particles
       // FinalState fs(Cuts::abseta < 5);
@@ -139,28 +141,30 @@ namespace Rivet {
       // Book histograms and counters
       // _c_sumw_fid =         bookCounter("sumw_fid_tot");
       // Loop for equivalent t and tbar selections
-      for (size_t itop = 0; itop < 2; ++itop) {
+      for (size_t itop = 0; itop < 2; itop++) {
         // const string xtop = (itop == 0) ? "tq" : "tbarq";
         // _c_sumw_fid[itop] =      bookCounter("sumw_fid_"+xtop);
         // _c_Xsec_fid[itop] =      bookCounter("Xsec_fid_"+xtop);
         //
-        _h_AbsPtclDiffXsecTPt[itop]   = bookHisto1D(1,1,1+itop);
-        _h_AbsPtclDiffXsecTY[itop]    = bookHisto1D(1,1,3+itop);
-        _h_NrmPtclDiffXsecTPt[itop]   = bookHisto1D(2,1,1+itop);
-        _h_NrmPtclDiffXsecTY[itop]    = bookHisto1D(2,1,3+itop);
+        //_h_AbsPtclDiffXsecTPt[itop]   = bookHisto1D(1,1,1+itop);
+        //_h_AbsPtclDiffXsecTY[itop]    = bookHisto1D(1,1,3+itop);
+	
+	book(_h_NrmPtclDiffXsecTPt[itop], 2, 1, 1+itop);
+	     //[itop]   = bookHisto1D(2,1,1+itop);
+        book(_h_NrmPtclDiffXsecTY[itop],2,1,3+itop);
         //
-        _h_AbsPtclDiffXsecJPt[itop]   = bookHisto1D(5,1,1+itop);
-        _h_AbsPtclDiffXsecJY[itop]    = bookHisto1D(5,1,3+itop);
-        _h_NrmPtclDiffXsecJPt[itop]   = bookHisto1D(6,1,1+itop);
-        _h_NrmPtclDiffXsecJY[itop]    = bookHisto1D(6,1,3+itop);
+        //_h_AbsPtclDiffXsecJPt[itop]   = bookHisto1D(5,1,1+itop);
+        //_h_AbsPtclDiffXsecJY[itop]    = bookHisto1D(5,1,3+itop);
+        book(_h_NrmPtclDiffXsecJPt[itop],6,1,1+itop);
+        book(_h_NrmPtclDiffXsecJY[itop], 6,1,3+itop);
         //
-        _h_AbsPrtnDiffXsecTPt[itop]	  = bookHisto1D(3,1,1+itop);
-	_h_AbsPrtnDiffXsecTY[itop]	  = bookHisto1D(3,1,3+itop);
-	_h_NrmPrtnDiffXsecTPt[itop]	  = bookHisto1D(4,1,1+itop);
-	_h_NrmPrtnDiffXsecTY[itop]	  = bookHisto1D(4,1,3+itop);
+        //_h_AbsPrtnDiffXsecTPt[itop]	  = bookHisto1D(3,1,1+itop);
+	//_h_AbsPrtnDiffXsecTY[itop]	  = bookHisto1D(3,1,3+itop);
+	book(_h_NrmPrtnDiffXsecTPt[itop],4,1,1+itop);
+	book(_h_NrmPrtnDiffXsecTY[itop],4,1,3+itop);
       }
-
-      for(int i = 0; i < 9; i++) cutflow[i] = 0;
+      
+      for (int i = 0; i<9; i++) cutflow[i] = 0;
 
     }
 
@@ -171,19 +175,22 @@ namespace Rivet {
 
       _c_eventCtr += 1;
       //if (_c_eventCtr < 2434){vetoEvent;}
+
+
       // PARTON-LEVEL ANALYSIS
       do { // trick to allow early exit from selection without full return
 
 	//const Particles& allTops = apply<PartonicTops>(event, "AllPartonicTops").particles();
-	const Particles& allTops = apply<PartonicTops>(event, "emuLeptonicTops").particles();
+	const Particles& allTops = apply<PartonicTops>(event, "EmuLeptonicTops").particles();
         if (allTops.size() != 1) break;
         const Particle& top = allTops[0];
 
         size_t itop = (top.charge() > 0) ? 0 : 1;
-	_h_AbsPrtnDiffXsecTPt[itop]->fill( top.pT(),     event.weight());
-	_h_AbsPrtnDiffXsecTY[itop] ->fill( top.absrap(), event.weight());
-	_h_NrmPrtnDiffXsecTPt[itop]->fill( top.pT(),     event.weight());
-	_h_NrmPrtnDiffXsecTY[itop] ->fill( top.absrap(), event.weight());
+	if ((top.charge() > 0) && (itop == 1)) cout << "oops!" << endl ;
+	//_h_AbsPrtnDiffXsecTPt[itop]->fill( top.pT(),     event.weight());
+	//_h_AbsPrtnDiffXsecTY[itop] ->fill( top.absrap(), event.weight());
+	_h_NrmPrtnDiffXsecTPt[itop]->fill( top.pT()/GeV);
+	_h_NrmPrtnDiffXsecTY[itop] ->fill( top.absrap());
 
       } while (false);
 
@@ -304,14 +311,14 @@ namespace Rivet {
 
         // Fill particle-level fiducial differential distributions
         size_t itop = (lep.charge() > 0) ? 0 : 1;
-        _h_AbsPtclDiffXsecTPt[itop]->fill( pTop.pT(),     event.weight());
-	_h_AbsPtclDiffXsecTY[itop] ->fill( pTop.absrap(), event.weight());
-	_h_NrmPtclDiffXsecTPt[itop]->fill( pTop.pT(),     event.weight());
-	_h_NrmPtclDiffXsecTY[itop] ->fill( pTop.absrap(), event.weight());
-	_h_AbsPtclDiffXsecJPt[itop]->fill( ljet.pT(),	  event.weight());
-	_h_AbsPtclDiffXsecJY[itop] ->fill( ljet.absrap(), event.weight());
-	_h_NrmPtclDiffXsecJPt[itop]->fill( ljet.pT(),	  event.weight());
-	_h_NrmPtclDiffXsecJY[itop] ->fill( ljet.absrap(), event.weight());
+        //_h_AbsPtclDiffXsecTPt[itop]->fill( pTop.pT(),     event.weight());
+	//_h_AbsPtclDiffXsecTY[itop] ->fill( pTop.absrap(), event.weight());
+	_h_NrmPtclDiffXsecTPt[itop]->fill( pTop.pT()/GeV);
+	_h_NrmPtclDiffXsecTY[itop] ->fill( pTop.absrap());
+	//_h_AbsPtclDiffXsecJPt[itop]->fill( ljet.pT(),	  event.weight());
+	//_h_AbsPtclDiffXsecJY[itop] ->fill( ljet.absrap(), event.weight());
+	_h_NrmPtclDiffXsecJPt[itop]->fill( ljet.pT()/GeV);
+	_h_NrmPtclDiffXsecJY[itop] ->fill( ljet.absrap());
 	
       } while (false); //< just one iteration
 
@@ -340,18 +347,18 @@ namespace Rivet {
 
       // Fiducial particle-level distributions (tops)
       //scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
-	scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() );
-	scale( _h_AbsPtclDiffXsecTY[i],  crossSection()/sumOfWeights() / lepBR );
+	//scale( _h_AbsPtclDiffXsecTPt[i], crossSection()/femtobarn/sumOfWeights() );
+	//scale( _h_AbsPtclDiffXsecTY[i],  crossSection()/sumOfWeights() / lepBR );
 	normalize(_h_NrmPtclDiffXsecTPt[i]);
 	normalize(_h_NrmPtclDiffXsecTY[i]);
 	// Fiducial particle-level distributions (jets)
-	scale( _h_AbsPtclDiffXsecJPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
-	scale( _h_AbsPtclDiffXsecJY[i],  crossSection()/sumOfWeights() / lepBR );
+	//scale( _h_AbsPtclDiffXsecJPt[i], crossSection()/femtobarn/sumOfWeights() / lepBR );
+	//scale( _h_AbsPtclDiffXsecJY[i],  crossSection()/sumOfWeights() / lepBR );
 	normalize(_h_NrmPtclDiffXsecJPt[i]);
 	normalize(_h_NrmPtclDiffXsecJY[i]);
 	// Full phase-space parton level results (tops)
-	scale(_h_AbsPrtnDiffXsecTPt[i], crossSection()/ femtobarn/ sumOfWeights()/ lepBR );
-	scale(_h_AbsPrtnDiffXsecTY[i],  crossSection() / sumOfWeights() / lepBR );
+	//scale(_h_AbsPrtnDiffXsecTPt[i], crossSection()/ femtobarn/ sumOfWeights()/ lepBR );
+	//scale(_h_AbsPrtnDiffXsecTY[i],  crossSection() / sumOfWeights() / lepBR );
 	normalize(_h_NrmPrtnDiffXsecTPt[i]);
 	normalize(_h_NrmPrtnDiffXsecTY[i]);
       }
@@ -388,11 +395,15 @@ namespace Rivet {
     double _c_reco_nuZ_diff = 0.0;
     double _c_abs_nuZ = 0.0;
     double _c_abs_reco_nuZ = 0.0;
-    
+
+
     // CounterPtr _c_Xsec_fid_tq, _c_sumw_fid, _c_sumw_fid_tq, _c_sumw_prtn_tq;
-    Histo1DPtr _h_AbsPtclDiffXsecTPt[2], _h_AbsPtclDiffXsecTY[2], _h_NrmPtclDiffXsecTPt[2], _h_NrmPtclDiffXsecTY[2];
-    Histo1DPtr _h_AbsPtclDiffXsecJPt[2], _h_AbsPtclDiffXsecJY[2], _h_NrmPtclDiffXsecJPt[2], _h_NrmPtclDiffXsecJY[2];
-    Histo1DPtr _h_AbsPrtnDiffXsecTPt[2], _h_AbsPrtnDiffXsecTY[2], _h_NrmPrtnDiffXsecTPt[2], _h_NrmPrtnDiffXsecTY[2];
+    //Histo1DPtr _h_AbsPtclDiffXsecTPt[2], _h_AbsPtclDiffXsecTY[2], _h_NrmPtclDiffXsecTPt[2], _h_NrmPtclDiffXsecTY[2];
+    Histo1DPtr _h_NrmPtclDiffXsecTPt[2], _h_NrmPtclDiffXsecTY[2];
+    //Histo1DPtr _h_AbsPtclDiffXsecJPt[2], _h_AbsPtclDiffXsecJY[2], _h_NrmPtclDiffXsecJPt[2], _h_NrmPtclDiffXsecJY[2];
+    Histo1DPtr _h_NrmPtclDiffXsecJPt[2], _h_NrmPtclDiffXsecJY[2];
+    //Histo1DPtr _h_AbsPrtnDiffXsecTPt[2], _h_AbsPrtnDiffXsecTY[2], _h_NrmPrtnDiffXsecTPt[2], _h_NrmPrtnDiffXsecTY[2];
+    Histo1DPtr _h_NrmPrtnDiffXsecTPt[2], _h_NrmPrtnDiffXsecTY[2];
 
     int cutflow[9];
 

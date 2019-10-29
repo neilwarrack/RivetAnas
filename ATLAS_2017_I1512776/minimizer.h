@@ -2,12 +2,33 @@
 the function:
 p_{y,nu}(p_{x,nu}) = (sqr(m_W)*p[2] + 2*p[1]*p[2]*x[0] +/- m_W*p[0]*sqrt(sqr(m_W) + 4*p[1]*x[0]))/2*sqr(p[1])
 its deriv:
+
 deiv = (p[2]/p[1]) +/- (m_W*p[0]*p[1]/(sqr(p[1])*sqrt(sqr(m_W) + 4*p[1]*x[0])))
 (sqr(m_W)*p[2]/(2*sqr(p[1])) + p[2]/p[1] + (m_W*p[0]*p[1])/(sqr(p[1])*sqrt(sqr(m_W) + 4*p[1]*x[0])))
-*/  
-
+*/
 
 inline double sqr(double x) { return x*x; }
+
+/* const double MenFn(){ */
+/*   double m_W = 80.4; */
+/*   double currentVal = sqrt(pow( x_1[0]-p[3] ,2) + pow( (sqr(m_W)*p[2] + 2*p[1]*p[2]*x_1[0] + m_W*p[0]*sqrt(sqr(m_W) + 4*p[1]*x_1[0]))/(2*sqr(p[1])) - p[4],2)); */
+
+/*   return currentVal; */
+/* } */
+
+const int MenFn_simple(int x){
+
+  double currentVal = x*x;
+
+  return currentVal;
+}
+
+const double randan(double s){
+  double evalRand = rand()/double(RAND_MAX);
+  return evalRand;
+    }
+
+
 
 
 

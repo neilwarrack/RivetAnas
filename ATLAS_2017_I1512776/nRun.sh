@@ -2,7 +2,9 @@ export RIVET_ANALYSIS_PATH=$PWD
 
 if [ "$1" == "-b" ]; then
     echo "attempting to build..."
-    rivet-buildplugin ATLAS_2017_I1512776.cc -L. -lmm -lgsl{,cblas}
+    #rivet-buildplugin ATLAS_2017_I1512776.cc -L. -lmm -lgsl{,cblas}
+    rivet-buildplugin ATLAS_2017_I1512776.cc
+
 fi
 
 if [ "$1" == "-t" ]; then
